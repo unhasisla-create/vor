@@ -1,0 +1,11 @@
+const fs = require('fs');
+let code = fs.readFileSync('src/components/ui/index.tsx', 'utf8');
+code = code.replace(/blue-600/g, 'teal-600');
+code = code.replace(/blue-500/g, 'teal-500');
+code = code.replace(/blue-700/g, 'teal-700');
+code = code.replace(/blue-50/g, 'teal-50');
+code = code.replace(/blue-200/g, 'teal-200');
+code = code.replace(/blue-800/g, 'teal-800');
+code = code.replace(/'blue'/g, "'teal'");
+code = code.replace(/"blue"/g, '"teal"');
+fs.writeFileSync('src/components/ui/index.tsx', code);

@@ -1,0 +1,323 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy:   #E8F0EC; /* Celadon Mist — soft sage background */
+  --navy2:  #D6E4DC; /* Slightly deeper celadon */
+  --navy3:  #C4D8CC; /* Deeper sage for hover states */
+  --accent: #5B8F82; /* Sage Teal — muted, sophisticated accent */
+  --accent-dark: #3D6B60;
+  --accent-light: #A8CBBF;
+  --sage-dark: #2C4A42; /* For text on light sage backgrounds */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Mono font utility ─────────────────────────────────────────────────────── */
+.font-mono-jb {
+  font-family: var(--font-mono);
+}
+
+/* ── Matrix grid ──────────────────────────────────────────────────────────── */
+.matrix-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 70vh;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 27, 45, 0.05), inset 0 1px 0 rgba(255,255,255,0.7);
+  background:
+    linear-gradient(to right, rgba(148,163,184,0.04), transparent 6%, transparent 94%, rgba(148,163,184,0.04));
+}
+
+.matrix-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: 11px;
+  white-space: nowrap;
+  width: max-content;
+  min-width: 1100px;
+}
+
+.matrix-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.matrix-table th,
+.matrix-table td {
+  box-sizing: border-box;
+}
+
+.matrix-table th {
+  background: #5B8F82;
+  color: #fff;
+  padding: 12px 6px;
+  text-align: center;
+  font-weight: 600;
+  border-right: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 2px solid #C4D8CC;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+}
+
+.matrix-table th.th-left {
+  text-align: left;
+  padding: 12px 14px;
+}
+
+.matrix-table th.th-today {
+  background: #3D6B60 !important;
+  font-weight: 700;
+}
+
+.matrix-table th.th-right {
+  background: #4A7B70;
+}
+
+.matrix-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.matrix-table tbody tr:nth-child(even) { background: #f8fafc; }
+.matrix-table tbody tr:hover           { background: #EFF5F2; }
+
+.matrix-table td {
+  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 4px 3px;
+  vertical-align: middle;
+  text-align: center;
+  background: inherit;
+}
+
+.matrix-table td.td-left {
+  padding: 8px 14px;
+  background: inherit;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.matrix-table td.td-right {
+  padding: 6px 8px;
+  background: #f8fafc;
+  text-align: center;
+  font-weight: 700;
+  font-size: 10px;
+  color: #475569;
+  border-left: 1px solid #e2e8f0;
+}
+
+/* Shadow separator for the frozen column border */
+.sticky-col-last {
+  border-right: 2px solid rgba(148, 163, 184, 0.45) !important;
+  box-shadow: 6px 0 12px rgba(15, 27, 45, 0.08);
+}
+
+/* ── Frozen (sticky) columns ──────────────────────────────────────────────── */
+/* Header frozen: highest z so they stay on top of everything during scroll */
+.matrix-table th.th-frozen {
+  position: sticky;
+  z-index: 50;
+  background: #5B8F82;
+}
+
+/* Body frozen: above normal cells but below header */
+.matrix-table td.td-frozen {
+  position: sticky;
+  z-index: 15;
+}
+
+/* On hover, frozen cells must also pick up the hover color */
+.matrix-table tbody tr:hover td.td-frozen {
+  background: #f1f7ff !important;
+}
+
+/* ── Status cell ─────────────────────────────────────────────────────────── */
+.status-cell {
+  width: 36px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.status-cell:hover {
+  transform: scale(1.08) translateY(-1px);
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  filter: brightness(0.92);
+}
+
+.status-cell.future {
+  cursor: not-allowed !important;
+  background: rgba(241, 245, 249, 0.45) !important;
+  color: #cbd5e1 !important;
+  border: 1px dashed #e2e8f0;
+  box-shadow: none;
+}
+
+.status-cell.today-outline {
+  outline: 2px solid #5B8F82;
+  outline-offset: -2px;
+}
+
+/* Clean dot corner indicator for notes */
+.note-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  background-color: #E17055;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #E17055;
+  z-index: 5;
+}
+
+/* ── Toast ─────────────────────────────────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.toast-enter { animation: slideUp 0.22s ease; }
+
+/* ── KPI progress bar ──────────────────────────────────────────────────────── */
+.kpi-progress-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.kpi-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* ── Forecast confidence styles ─────────────────────────────────────────────── */
+.fc-system { opacity: 0.55; border: 1px dashed rgba(0,0,0,0.3) !important; }
+.fc-manual { opacity: 1; }
+
+/* ── Select control base ──────────────────────────────────────────────────── */
+.ctrl-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: #374151;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ctrl-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.ctrl-select:hover {
+  border-color: #94a3b8;
+}
+
+/* ── Actual Operation Toolbar ─────────────────────────────────────────────── */
+.act-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 27, 45, 0.04);
+  position: relative;
+  z-index: 5;
+}
+
+.act-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.act-toolbar__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.act-toolbar__divider {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, transparent, #cbd5e1 30%, #cbd5e1 70%, transparent);
+  flex-shrink: 0;
+}
+
+.act-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.act-toolbar__jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid #93c5fd;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.act-toolbar__jump:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #60a5fa;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+  transform: translateY(-1px);
+}
+.act-toolbar__jump:active {
+  transform: translateY(0);
+}
+
