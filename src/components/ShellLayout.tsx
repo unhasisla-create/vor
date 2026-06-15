@@ -34,6 +34,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const router   = useRouter()
   const initFromServer = useVORStore(s => s.initFromServer)
+  const loadRevenues = useVORStore(s => s.loadRevenues)
+  const isHydrated = useVORStore(s => s.isHydrated)
   const branch   = useVORStore(s => s.branch)
   const setBranch = useVORStore(s => s.setBranch)
   const [clock,  setClock]  = useState('')
@@ -55,7 +57,10 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           saveUserSession(data.user)
           setUser(data.user)
           setBranch(data.user.branch)
-          await initFromServer()
+          if (!isHydrated) {
+            await initFromServer()
+            loadRevenues().catch(() => {})
+          }
         }
       })
       .catch(() => {
@@ -63,7 +68,8 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
         router.push('/login')
       })
       .finally(() => setAuthLoading(false))
-  }, [router, setBranch, initFromServer])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const tick = () => {

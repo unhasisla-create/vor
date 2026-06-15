@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCurrentSession } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getCurrentSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(request.url)
+  const month = parseInt(searchParams.get('month') || '')
+  const year = parseInt(searchParams.get('year') || '')
+  const dateFilter = month && year ? {
+    gte: `${year}-${String(month).padStart(2, '0')}-01`,
+    lte: `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`,
+  } : undefined
 
   const branchWhere = session.branch !== 'ALL' && !['Admin', 'Management'].includes(session.role)
     ? { branch: { code: session.branch } }
@@ -16,8 +24,8 @@ export async function GET() {
       branch: { select: { code: true } },
       customerMaster: { select: { id: true, name: true } },
       driverMaster: { select: { id: true, name: true } },
-      actuals: true,
-      forecasts: true,
+      actuals: dateFilter ? { where: { date: dateFilter } } : true,
+      forecasts: dateFilter ? { where: { date: dateFilter } } : true,
     },
     orderBy: [{ branch: { code: 'asc' } }, { nopol: 'asc' }],
   })

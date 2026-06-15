@@ -52,6 +52,8 @@ interface VORStore {
   initFromServer: () => Promise<void>
   loadFromServer: () => Promise<void>
   resetData: () => void
+  isHydrated: boolean
+  setHydrated: (v: boolean) => void
 }
 
 function postJson(url: string, body: unknown, method = 'POST') {
@@ -75,8 +77,8 @@ export const useVORStore = create<VORStore>()(
       month: new Date().getMonth() + 1,
       year: new Date().getFullYear(),
       branch: 'ALL',
-      setMonth: (m) => set({ month: m }),
-      setYear: (y) => set({ year: y }),
+      setMonth: (m) => { set({ month: m }); get().loadFromServer().catch(() => {}) },
+      setYear: (y) => { set({ year: y }); get().loadFromServer().catch(() => {}) },
       setBranch: (b) => set(s => ({ branch: normalizeBranchValue(b, s.branches) })),
       setStatuses: (statuses) => set({ statuses }),
       setBranches: (branches) => set(s => ({ branches, branch: normalizeBranchValue(s.branch, branches) })),
@@ -95,14 +97,19 @@ export const useVORStore = create<VORStore>()(
         get().initFromServer().catch(() => {})
       },
 
+      isHydrated: false,
+      setHydrated: (v) => set({ isHydrated: v }),
+
       initFromServer: async () => {
         await get().loadFromServer()
         await get().loadBranches()
         await get().loadStatusConfigs()
+        set({ isHydrated: true })
       },
 
       loadFromServer: async () => {
-        const res = await fetch('/api/operations', { credentials: 'include' })
+        const { month, year } = get()
+        const res = await fetch(`/api/operations?month=${month}&year=${year}`, { credentials: 'include' })
         if (!res.ok) throw new Error('Gagal memuat data operasional.')
         const data = await res.json()
         set({
