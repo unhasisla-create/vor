@@ -2,7 +2,7 @@
 import { useVORStore } from '@/lib/store'
 import { useEffect, useMemo, useState } from 'react'
 import type { AuditLog } from '@/lib/types'
-import { PageHeader, Badge, Card } from '@/components/ui'
+import { PageHeader, Badge, Card, Select } from '@/components/ui'
 import { getStoredUser } from '@/lib/auth-client'
 import { BRANCHES } from '@/lib/constants'
 
@@ -152,11 +152,10 @@ export default function AuditTrail() {
           <div className="flex gap-2 flex-wrap">
             <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
               className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400" />
-            <select value={filterBranch} onChange={e => setFilterBranch(e.target.value)} disabled={!canViewAllAudits && userBranch !== 'ALL'}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:bg-slate-100 disabled:text-[#5B8F82]">
+            <Select value={filterBranch} onChange={v => setFilterBranch(v)} disabled={!canViewAllAudits && userBranch !== 'ALL'}>
               {(canViewAllAudits || userBranch === 'ALL') && <option value="ALL">ALL — Semua Cabang</option>}
               {effectiveBranchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
-            </select>
+            </Select>
           </div>
         }
       />

@@ -5,6 +5,7 @@ import type { Vehicle, StatusMap, NoteMap, ForecastMap, AuditLog, Branch, Revenu
 import { nowTimestamp } from '@/lib/utils'
 import { formatDateKey, formatDateObjectKey } from '@/lib/constants'
 import { setStatusCache } from '@/lib/status-utils'
+import { showToast } from '@/components/ui'
 
 interface VORStore {
   month: number
@@ -340,7 +341,9 @@ export const useVORStore = create<VORStore>()(
 
         set({ forecast })
         get().addAudit('Generate Forecast', `Branch ${branchId} - ${generated} unit draft SYSTEM`)
-        postJson('/api/forecasts/generate', { branchId }).then(() => get().loadFromServer()).catch(() => {})
+        postJson('/api/forecasts/generate', { branchId })
+          .then(() => get().loadFromServer())
+          .catch(() => showToast('Gagal menyimpan forecast ke server.', 'error'))
         return generated
       },
 

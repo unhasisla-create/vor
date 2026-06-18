@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import { useVORStore } from '@/lib/store'
-import { PageHeader, Card, Btn, showToast, InfoBox } from '@/components/ui'
+import { PageHeader, Card, Btn, showToast, InfoBox, Select } from '@/components/ui'
 import { MONTH_NAMES, BRANCHES } from '@/lib/constants'
 import { getStoredUser } from '@/lib/auth-client'
 import RevenueImportModal from './RevenueImportModal'
-import { Upload, Save, TrendingUp, TrendingDown, DollarSign, ChevronDown } from 'lucide-react'
+import { Upload, Save, TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
 
 export default function RevenueEvaluation() {
   const { month, year, branch, setMonth, setYear, setBranch, branches, vehicles, revenues, loadRevenues } = useVORStore()
@@ -161,14 +161,10 @@ export default function RevenueEvaluation() {
           <div className="flex flex-wrap gap-2.5 items-center">
             <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}
               className="appearance-none pl-4 pr-9 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] font-medium text-[#3D6B60] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm transition-all hover:border-slate-300 hover:shadow-md min-w-[140px]" />
-            <div className="relative">
-              <select value={effectiveBranch} onChange={e => setBranch(e.target.value)} disabled={!canSwitchBranch}
-                className="appearance-none pl-4 pr-9 py-2.5 rounded-xl border border-slate-200 bg-white text-[13px] font-medium text-[#3D6B60] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent shadow-sm transition-all hover:border-slate-300 hover:shadow-md disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-[#7A9E94] min-w-[160px]">
-                {canSwitchBranch && <option value="ALL">ALL — Semua Cabang</option>}
-                {branchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
-              </select>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A9E94] pointer-events-none" />
-            </div>
+            <Select value={effectiveBranch} onChange={v => setBranch(v)} disabled={!canSwitchBranch} className="min-w-[160px]">
+              {canSwitchBranch && <option value="ALL">ALL — Semua Cabang</option>}
+              {branchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
+            </Select>
           </div>
         </div>
       </div>

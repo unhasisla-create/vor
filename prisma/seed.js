@@ -7,18 +7,33 @@ const BRANCHES = [
   { name: 'Logistik Makassar', code: 'LMKS' },
   { name: 'Vehicle Makassar', code: 'VLIM' },
   { name: 'Logistik Surabaya', code: 'LSBY' },
-  { name: 'Logistik Jakarta', code: 'LJK' },
-  { name: 'Logistik Balikpapan', code: 'LBP' },
+  { name: 'Logistik Jakarta', code: 'LJKT' },
+  { name: 'Logistik Balikpapan', code: 'LBPP' },
 ]
 
 const STATUS_MASTER = [
-  { code: 'UTI', desc: 'Utilisasi', group: 'UTILISASI', color: '#16a34a', isForecast: true, details: 'Armada aktif beroperasi' },
-  { code: 'RFU', desc: 'Ready For Use', group: 'READY FOR USE', color: '#ca8a04', isForecast: true, details: 'Armada siap digunakan' },
-  { code: 'BD', desc: 'Breakdown', group: 'BREAKDOWN', color: '#dc2626', isForecast: true, details: 'Armada rusak' },
-  { code: 'AM', desc: 'Antri Muat', group: 'DELAY', color: '#ea580c', isForecast: true, details: 'Antri Muat' },
-  { code: 'C', desc: 'Cuci', group: 'DELAY', color: '#0ea5e9', isForecast: false, details: 'Cuci armada' },
-  { code: 'MB', desc: 'Muatan Batal', group: 'DELAY', color: '#8b5cf6', isForecast: true, details: 'Muatan batal' },
-  { code: 'L', desc: 'Libur', group: 'DELAY', color: '#2563eb', isForecast: true, details: 'Armada libur' },
+  { code: 'UTI',   desc: 'Utilisasi',                  group: 'UTILISASI',       color: '#16a34a', isForecast: true,  details: 'Armada aktif dan sedang melakukan pengiriman atau tugas operasional.' },
+  { code: 'C',     desc: 'Carry Over',                 group: 'UTILISASI',       color: '#15803d', isForecast: true,  details: 'Tugas yang dilanjutkan dari periode sebelumnya dan masih berjalan.' },
+  { code: 'MB',    desc: 'Muatan Balik',               group: 'UTILISASI',       color: '#059669', isForecast: true,  details: 'Armada membawa muatan kembali setelah menyelesaikan tugas angkut utama.' },
+  { code: 'RFU',   desc: 'Ready For Use',              group: 'READY FOR USE',   color: '#ca8a04', isForecast: true,  details: 'Armada siap digunakan dan menunggu instruksi tugas selanjutnya.' },
+  { code: 'RB',    desc: 'Ready Bengkel',              group: 'READY FOR USE',   color: '#d97706', isForecast: true,  details: 'Armada berada di bengkel tetapi sudah siap digunakan kembali setelah servis ringan.' },
+  { code: 'BD',    desc: 'Breakdown',                  group: 'BREAKDOWN',       color: '#dc2626', isForecast: true,  details: 'Armada mengalami kerusakan yang menghentikan operasional dan memerlukan perbaikan.' },
+  { code: 'BDJ+1', desc: 'Breakdown Dijalan > 1 Hari', group: 'BREAKDOWN',      color: '#b91c1c', isForecast: true,  details: 'Kerusakan parah yang menyebabkan armada tidak bisa beroperasi lebih dari satu hari.' },
+  { code: 'AM',    desc: 'Antri Muat',                 group: 'DELAY',           color: '#ea580c', isForecast: true,  details: 'Armada menunggu antrean untuk proses pemuatan barang.' },
+  { code: 'BT',    desc: 'BOP Terlambat',              group: 'DELAY',           color: '#c2410c', isForecast: true,  details: 'Operasi tertunda karena proses BOP atau administrasi yang belum selesai.' },
+  { code: 'AS',    desc: 'Antri Solar',                group: 'DELAY',           color: '#9a3412', isForecast: true,  details: 'Armada sedang menunggu pengisian bahan bakar sebelum melanjutkan perjalanan.' },
+  { code: 'BDJ-1', desc: 'Breakdown Dijalan < 1 Hari', group: 'DELAY',          color: '#b45309', isForecast: true,  details: 'Kerusakan ringan yang memperlambat operasi selama kurang dari satu hari.' },
+  { code: 'FM',    desc: 'Force Maujure',              group: 'DELAY',           color: '#7c3aed', isForecast: true,  details: 'Keterlambatan karena kejadian di luar kendali, seperti cuaca buruk atau bencana.' },
+  { code: 'BTJ',   desc: 'Buka Tutup Jalur',           group: 'DELAY',           color: '#6d28d9', isForecast: true,  details: 'Perjalanan tertunda karena penutupan atau pembukaan ruas jalan.' },
+  { code: 'AB',    desc: 'Antri Bongkar',              group: 'DELAY',           color: '#5b21b6', isForecast: true,  details: 'Armada menunggu giliran bongkar muat di lokasi tujuan.' },
+  { code: 'TAD',   desc: 'Tidak Ada Driver',           group: 'DNA (DS HO)',     color: '#db2777', isForecast: true,  details: 'Armada tidak dapat beroperasi karena tidak tersedia driver.' },
+  { code: 'TK',    desc: 'Tanpa Keterangan',           group: 'DNA (HC CABANG)', color: '#be185d', isForecast: true,  details: 'Status tidak jelas atau belum diidentifikasi oleh cabang.' },
+  { code: 'L',     desc: 'Libur',                      group: 'NWD',             color: '#2563eb', isForecast: true,  details: 'Armada tidak beroperasi karena periode libur atau istirahat.' },
+  { code: 'AT',    desc: 'Asset Tertahan',             group: 'UNR',             color: '#6b7280', isForecast: true,  details: 'Aset terhambat oleh masalah administratif atau dokumen.' },
+  { code: 'LNR',   desc: 'Lisensi Belum Aktif',        group: 'UNR',             color: '#4b5563', isForecast: true,  details: 'Armada tidak bisa beroperasi karena lisensi atau izin belum aktif.' },
+  { code: 'KR',    desc: 'Karoseri',                   group: 'UNR',             color: '#374151', isForecast: true,  details: 'Armada sedang menjalani perbaikan bodi atau karoseri.' },
+  { code: 'MT-IN', desc: 'Mutasi Masuk',               group: 'UNR',             color: '#9ca3af', isForecast: false, details: 'Unit masuk dari mutasi cabang lain dan sedang dalam proses penerimaan.' },
+  { code: 'MT-OUT',desc: 'Mutasi Keluar',              group: 'UNR',             color: '#d1d5db', isForecast: false, details: 'Unit sedang dipindahkan ke cabang lain untuk operasional.' },
 ]
 
 const VEHICLE_TYPES = ['BOX VAN', 'CDE BOX', 'CDD STANDAR', 'WINGBOX', 'FUSO']
@@ -44,12 +59,12 @@ const VEHICLES_PER_BRANCH = {
     { nopol: 'L 3002 XX', type: 'CDE BOX', tonase: 3, kubikasi: 10, customer: 'CIOMAS', driver: 'BAMBANG', target: 3200000 },
     { nopol: 'L 3003 XX', type: 'WINGBOX', tonase: 5, kubikasi: 15, customer: 'DEPO', driver: 'HENDRA', target: 4200000 },
   ],
-  LJK: [
+  LJKT: [
     { nopol: 'B 4001 XX', type: 'CDD STANDAR', tonase: 4, kubikasi: 12, customer: 'INDOMARET', driver: 'DODI', target: 3500000 },
     { nopol: 'B 4002 XX', type: 'FUSO', tonase: 8, kubikasi: 20, customer: 'SHOPEE', driver: 'SULTAN', target: 5500000 },
     { nopol: 'B 4003 XX', type: 'BOX VAN', tonase: 2, kubikasi: 8, customer: 'ALFAMART', driver: 'AGUS', target: 2500000 },
   ],
-  LBP: [
+  LBPP: [
     { nopol: 'KT 5001 XX', type: 'CDE BOX', tonase: 3, kubikasi: 10, customer: 'CIOMAS', driver: 'BAMBANG', target: 3000000 },
     { nopol: 'KT 5002 XX', type: 'WINGBOX', tonase: 5, kubikasi: 15, customer: 'DEPO', driver: 'HENDRA', target: 4500000 },
     { nopol: 'KT 5003 XX', type: 'FUSO', tonase: 8, kubikasi: 20, customer: 'SHOPEE', driver: 'FIRMAN', target: 6000000 },
@@ -141,7 +156,11 @@ const ljk = await prisma.branch.findUnique({ where: { code: 'LJK' } })
 
   // 3. Status Configs
   for (const s of STATUS_MASTER) {
-    await prisma.statusConfig.upsert({ where: { code: s.code }, update: {}, create: s })
+    await prisma.statusConfig.upsert({
+      where: { code: s.code },
+      update: { desc: s.desc, group: s.group, color: s.color, details: s.details, isForecast: s.isForecast },
+      create: s
+    })
   }
   console.log('✅ Status Configs seeded')
 

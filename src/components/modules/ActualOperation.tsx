@@ -5,7 +5,7 @@ import { getStoredUser } from '@/lib/auth-client'
 import { BRANCHES, MONTH_NAMES, daysInMonth, formatDateKey } from '@/lib/constants'
 import { getStatusColor, getTextColor, getActiveStatuses } from '@/lib/status-utils'
 import { computeKPI, kpiBgStyle } from '@/lib/utils'
-import { Btn, ConfirmModal, Modal } from '@/components/ui'
+import { PageHeader, Btn, ConfirmModal, Modal, FilterPopup } from '@/components/ui'
 import { showToast } from '@/components/ui'
 import { exportActualToXLSX } from '@/lib/export'
 import { Download } from 'lucide-react'
@@ -109,7 +109,6 @@ function CellPopover({ vehicleId, day, nopol, onClose }: {
 export default function ActualOperation() {
   const { month, year, branch, setMonth, setYear, setBranch, vehicles, statuses, notes, copyActualYesterday, copyActualRange, copyForecastYesterday, branches } = useVORStore()
   const user = getStoredUser()
-  const canSwitchBranch = ['Admin', 'Management'].includes(user?.role ?? '')
 
   const branchOptions = branches.length ? branches.filter(b => b.isActive ?? true) : BRANCHES
 
@@ -297,52 +296,29 @@ export default function ActualOperation() {
         </Modal>
       )}
 
-      {/* ── Page Title (title only, no actions) ── */}
-      <div className="mb-4">
-        <h2 className="text-[22px] font-bold tracking-tight text-gray-900">Actual Operation</h2>
-        <p className="mt-0.5 text-[13px] text-gray-500">
-          {branchName} — {vList.length} unit aktif — {MONTH_NAMES[month-1]} {year}
-        </p>
-      </div>
+      {/* ── Page Header with Filter ── */}
+      <PageHeader
+        title="Actual Operation"
+        subtitle={`${branchName} — ${vList.length} unit aktif — ${MONTH_NAMES[month-1]} ${year}`}
+        actions={
+          <div className="flex items-center gap-2">
+            <FilterPopup hasActiveFilter={branch !== 'ALL'} />
+          </div>
+        }
+      />
 
       {/* ── Sticky Toolbar ── */}
-      <div className="act-toolbar">
-        {/* Grup Kiri: Filter Controls */}
-        <div className="act-toolbar__filters">
-          <span className="act-toolbar__label">Filter:</span>
-          <select value={month} onChange={e => setMonth(+e.target.value)} className="ctrl-select">
-            {MONTH_NAMES.map((m,i) => <option key={i+1} value={i+1}>{m}</option>)}
-          </select>
-          <select value={year} onChange={e => setYear(+e.target.value)} className="ctrl-select">
-            {[2024,2025,2026].map(y => <option key={y}>{y}</option>)}
-          </select>
-          <select value={branch} onChange={e => setBranch(e.target.value)} className="ctrl-select" disabled={!canSwitchBranch}>
-            <option value="ALL">ALL — Semua Cabang</option>
-            {branchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
-          </select>
-          {!canSwitchBranch && user?.branch !== 'ALL' ? (
-            <span className="text-[11px] text-[#5B8F82] self-center">{user?.branch}</span>
-          ) : null}
-          <button className="act-toolbar__jump" onClick={jumpToToday}>
-            📍 Hari Ini
-          </button>
-        </div>
-
-        {/* Divider */}
+      <div className="act-toolbar" style={{ justifyContent: 'flex-end' }}>
+        <button className="act-toolbar__jump" onClick={jumpToToday}>
+          📍 Hari Ini
+        </button>
         <div className="act-toolbar__divider" />
-
-        {/* Grup Kanan: Action Buttons */}
-        <div className="act-toolbar__actions">
-          <Btn variant="ghost-green" onClick={handleCopyActual}>
-            ✅ Copy Actual
-          </Btn>
-          <Btn variant="ghost-blue" onClick={() => setConfirm({ msg: 'Timpa data hari ini dengan Forecast kemarin?', onConfirm: handleCopyForecast })}>
-            📋 Copy Forecast
-          </Btn>
-          {/* <Btn variant="outline" onClick={handleExport}>
-            <Download size={13} /> Export XLSX
-          </Btn> */}
-        </div>
+        <Btn variant="ghost-green" onClick={handleCopyActual}>
+          ✅ Copy Actual
+        </Btn>
+        <Btn variant="ghost-blue" onClick={() => setConfirm({ msg: 'Timpa data hari ini dengan Forecast kemarin?', onConfirm: handleCopyForecast })}>
+          📋 Copy Forecast
+        </Btn>
       </div>
 
       <div className="matrix-container">

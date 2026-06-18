@@ -9,7 +9,7 @@ import type { UserSession } from '@/lib/types'
 import { Skeleton } from '@/components/ui'
 import {
   LayoutDashboard, Database, Table2, CalendarDays,
-  BarChart3, GitCompare, ScrollText, LogOut, RefreshCw, DollarSign
+  BarChart3, GitCompare, ScrollText, LogOut, RefreshCw, DollarSign, AlertTriangle
 } from 'lucide-react'
 
 const NAV = [
@@ -20,14 +20,15 @@ const NAV = [
   { href: '/revenue',   label: 'Revenue Evaluation', icon: DollarSign },
   { href: '/kpi',       label: 'KPI Engine',         icon: BarChart3,      section: 'Analitik' },
   { href: '/fva',       label: 'Forecast vs Actual', icon: GitCompare },
+  { href: '/breakdown', label: 'Breakdown Analysis', icon: AlertTriangle },
   { href: '/audit',     label: 'Audit Trail',        icon: ScrollText,     section: 'Sistem' },
 ]
 
 const ROLE_NAV: Record<string, string[]> = {
-  Admin: ['/dashboard', '/master', '/actual', '/forecast', '/revenue', '/kpi', '/fva', '/audit'],
-  Planner: ['/dashboard', '/actual', '/forecast', '/kpi', '/fva', '/audit'],
-  Supervisor: ['/dashboard', '/actual', '/forecast', '/kpi', '/fva', '/audit'],
-  Management: ['/dashboard', '/revenue', '/kpi', '/fva'],
+  Admin: ['/dashboard', '/master', '/actual', '/forecast', '/revenue', '/kpi', '/fva', '/breakdown', '/audit'],
+  Planner: ['/dashboard', '/actual', '/forecast', '/kpi', '/fva', '/breakdown', '/audit'],
+  Supervisor: ['/dashboard', '/actual', '/forecast', '/kpi', '/fva', '/breakdown', '/audit'],
+  Management: ['/dashboard', '/revenue', '/kpi', '/fva', '/breakdown'],
 }
 
 export default function ShellLayout({ children }: { children: React.ReactNode }) {

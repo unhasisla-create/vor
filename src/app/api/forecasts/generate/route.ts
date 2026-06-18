@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const todayKey = formatDateObjectKey(today)
   const tomorrowKey = formatDateObjectKey(tomorrow)
 
-  const vehicles = await prisma.vehicle.findMany({ where: { isActive: true, branch: { code: branchId } } })
+  const vehicles = await prisma.vehicle.findMany({ where: { isActive: true, ...(branchId !== 'ALL' ? { branch: { code: branchId } } : {}) } })
   let generated = 0
   for (const vehicle of vehicles) {
     const actual = await prisma.actualOperation.findUnique({ where: { vehicleId_date: { vehicleId: vehicle.id, date: todayKey } } })

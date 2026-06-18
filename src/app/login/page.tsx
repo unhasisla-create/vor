@@ -4,19 +4,13 @@ import { useRouter } from 'next/navigation'
 import { saveUserSession } from '@/lib/auth-client'
 import { useVORStore } from '@/lib/store'
 
-const DEMO_USERS = [
-  { username: 'admin',         password: 'vor2024', role: 'Admin',      branch: 'ALL',  name: 'Admin' },
-  { username: 'planner.lmks',  password: 'vor2024', role: 'Planner',    branch: 'LMKS', name: 'Planner LMKS' },
-  { username: 'supervisor.lmks', password: 'vor2024', role: 'Supervisor', branch: 'LMKS', name: 'Supervisor LMKS' },
-  { username: 'management',    password: 'vor2024', role: 'Management',  branch: 'ALL',  name: 'Management' },
-]
-
 export default function LoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,15 +84,33 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="block text-[12px] font-medium text-white/60 mb-1.5">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white text-[13px]
-                  placeholder-white/25 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/30 transition"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white/10 border border-white/15 text-white text-[13px]
+                    placeholder-white/25 focus:outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-400/30 transition"
+                />
+                <button type="button" onClick={() => setShowPassword(p => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition">
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (
@@ -114,21 +126,6 @@ export default function LoginPage() {
               {loading ? 'Memverifikasi...' : 'Masuk'}
             </button>
           </form>
-
-          {/* Demo credentials hint */}
-          <div className="mt-6 p-4 rounded-xl bg-white/[0.04] border border-white/10">
-            <p className="text-[11px] text-white/40 font-medium mb-2">Akun Demo (password: vor2024)</p>
-            <div className="space-y-1">
-              {DEMO_USERS.map(u => (
-                <button key={u.username} onClick={() => { setUsername(u.username); setPassword('vor2024') }}
-                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg
-                    text-[11px] text-white/50 hover:text-white/80 hover:bg-white/[0.06] transition text-left">
-                  <span className="font-mono-jb">{u.username}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300">{u.role}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         <p className="text-center text-[11px] text-white/20 mt-6">

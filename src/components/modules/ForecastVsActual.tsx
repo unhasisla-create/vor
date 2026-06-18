@@ -1,26 +1,14 @@
 'use client'
-import { useEffect, useMemo, useState, useRef } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useVORStore } from '@/lib/store'
-import { BRANCHES, MONTH_NAMES, daysInMonth, formatDateKey } from '@/lib/constants'
+import { BRANCHES, daysInMonth, formatDateKey } from '@/lib/constants'
 import { getStatusMeta } from '@/lib/status-utils'
-import { PageHeader, KpiCard, Card } from '@/components/ui'
+import { PageHeader, KpiCard, Card, FilterPopup, Select } from '@/components/ui'
 import { getStoredUser } from '@/lib/auth-client'
 
 export default function ForecastVsActual() {
   const { month, year, branch, setMonth, setYear, setBranch, vehicles, statuses, forecast, branches } = useVORStore()
   const [selectedDate, setSelectedDate] = useState<string>('ALL')
-  const [showDatePopup, setShowDatePopup] = useState(false)
-  const dateRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dateRef.current && !dateRef.current.contains(event.target as Node)) {
-        setShowDatePopup(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
 
   const user = getStoredUser()
   const canSwitchBranch = ['Admin', 'Management'].includes(user?.role ?? '')
@@ -81,75 +69,41 @@ export default function ForecastVsActual() {
     <div>
       <PageHeader
         title="Forecast vs Actual"
-        subtitle="Analisis akurasi rencana vs realisasi operasional"
+        subtitle="Forecast vs actual accuracy analysis"
         actions={
-          <div className="flex gap-2 flex-wrap">
-            <div className="relative" ref={dateRef}>
-              <button 
-                onClick={() => setShowDatePopup(!showDatePopup)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-400 transition-colors">
-                <svg className="w-3.5 h-3.5 text-[#5B8F82]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span className="font-medium text-[#3D6B60]">{selectedDate === 'ALL' ? 'Semua Tanggal' : `Tgl ${selectedDate}`}</span>
-              </button>
-              
-              {showDatePopup && (
-                <div className="absolute top-full left-0 mt-1.5 w-64 p-3 bg-white border border-slate-200 rounded-xl shadow-xl z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="mb-3">
-                    <button 
-                      onClick={() => { setSelectedDate('ALL'); setShowDatePopup(false); }}
-                      className={`w-full py-2 rounded-lg text-[12px] font-medium transition-all ${selectedDate === 'ALL' ? 'bg-teal-50 text-teal-600 border border-teal-200 shadow-sm' : 'bg-slate-50 text-[#4A6B60] border border-slate-200 hover:bg-slate-100'}`}>
-                      📅 Tampilkan Semua Tanggal
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-7 gap-1 text-center">
-                    {Array.from({length: maxDay}, (_, i) => i + 1).map(d => (
-                      <button
-                        key={d}
-                        onClick={() => { setSelectedDate(String(d)); setShowDatePopup(false); }}
-                        className={`aspect-square rounded-md text-[12px] flex items-center justify-center transition-all ${selectedDate === String(d) ? 'bg-teal-500 text-white font-bold shadow-md scale-105' : 'hover:bg-slate-100 text-[#3D6B60] hover:font-medium'}`}>
-                        {d}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <FilterPopup hasActiveFilter={effectiveBranch !== 'ALL' || selectedDate !== 'ALL'}>
+            <div>
+              <label className="text-[11px] font-semibold text-[#5B8F82] mb-1.5 block">Day</label>
+              <Select value={selectedDate} onChange={v => setSelectedDate(v)}>
+                <option value="ALL">All Dates</option>
+                {Array.from({ length: maxDay }, (_, i) => i + 1).map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </Select>
             </div>
-            <select value={month} onChange={e => setMonth(+e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-              {MONTH_NAMES.map((m,i) => <option key={i+1} value={i+1}>{m}</option>)}
-            </select>
-            <select value={year} onChange={e => setYear(+e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-              {[2024,2025,2026].map(y => <option key={y}>{y}</option>)}
-            </select>
-            <select value={effectiveBranch} onChange={e => setBranch(e.target.value)} disabled={!canSwitchBranch}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-[#5B8F82]">
-              {canSwitchBranch && <option value="ALL">ALL — Semua Cabang</option>}
-              {branchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
-            </select>
-          </div>
+          </FilterPopup>
         }
       />
 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
         <KpiCard label="Forecast Accuracy" value={`${analysis.acc}%`} sub="Target ≥ 80%"
           color={parseFloat(analysis.acc)>=80?'#16a34a':parseFloat(analysis.acc)>=60?'#ca8a04':'#dc2626'} />
-        <KpiCard label="✓ MATCH"          value={analysis.match}   sub="Sesuai rencana"      color="#16a34a" />
-        <KpiCard label="≈ CHANGED"         value={analysis.changed} sub="Grup sama, status beda" color="#ca8a04" />
-        <KpiCard label="✗ MAJOR DEVIATION" value={analysis.major}   sub="Deviasi signifikan"  color="#dc2626" />
-        <KpiCard label="! UNPLANNED"       value={analysis.unplanned} sub="Tanpa forecast"  color="#64748b" />
-        <KpiCard label="Total Sel"          value={analysis.total}   sub="Terbandingkan"       color="#6b7280" />
+        <KpiCard label="✓ MATCH"          value={analysis.match}   sub="As planned"      color="#16a34a" />
+        <KpiCard label="≈ CHANGED"         value={analysis.changed} sub="Same group, diff status" color="#ca8a04" />
+        <KpiCard label="✗ MAJOR DEVIATION" value={analysis.major}   sub="Significant deviation"  color="#dc2626" />
+        <KpiCard label="! UNPLANNED"       value={analysis.unplanned} sub="Actual without forecast"  color="#64748b" />
+        <KpiCard label="Total Cells"       value={analysis.total}   sub="Comparable"       color="#6b7280" />
       </div>
 
       <Card className="!p-0 overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-5">
-          <h3 className="font-semibold text-[13px]">Matriks Deviasi Per Unit</h3>
+          <h3 className="font-semibold text-[13px]">Deviation Matrix Per Unit</h3>
           <div className="flex gap-4 text-[11px] text-gray-500 ml-auto">
             {[
               { color:'#16a34a', label:'M = Match' },
-              { color:'#ca8a04', label:'C = Changed (grup sama)' },
+              { color:'#ca8a04', label:'C = Changed (same group)' },
               { color:'#dc2626', label:'MD = Major Deviation' },
-              { color:'#64748b', label:'UP = Unplanned (Hanya Actual)' },
+              { color:'#64748b', label:'UP = Unplanned (Actual only)' },
             ].map(l => (
               <span key={l.label} className="flex items-center gap-1.5">
                 <span className="inline-block w-4 h-4 rounded-sm" style={{ background: l.color }} />
@@ -166,12 +120,12 @@ export default function ForecastVsActual() {
                 <th className="px-3 py-3 text-left text-[11px] font-medium" style={{ width:110 }}>Nopol</th>
                 <th className="px-3 py-3 text-left text-[11px] font-medium" style={{ width:100 }}>Customer</th>
                 {selectedDate === 'ALL' ? (
-                  <th className="px-3 py-3 text-left text-[11px] font-medium">Perbandingan Harian (Forecast → Actual)</th>
+                  <th className="px-3 py-3 text-left text-[11px] font-medium">Daily Comparison (Forecast → Actual)</th>
                 ) : (
                   <>
                     <th className="px-3 py-3 text-left text-[11px] font-medium">Forecast</th>
                     <th className="px-3 py-3 text-left text-[11px] font-medium">Actual</th>
-                    <th className="px-3 py-3 text-left text-[11px] font-medium">Status / Deviasi</th>
+                    <th className="px-3 py-3 text-left text-[11px] font-medium">Status / Deviation</th>
                   </>
                 )}
               </tr>
@@ -191,13 +145,13 @@ export default function ForecastVsActual() {
                           {cells.map(c => (
                             <span key={c.day}
                               style={{ background: c.color, color:'#fff', width:26, height:26, borderRadius:4, fontSize:8, fontWeight:800, display:'inline-flex', alignItems:'center', justifyContent:'center' }}
-                              title={`Tgl ${c.day} | Forecast: ${c.fc || '-'} | Actual: ${c.ac || '-'}`}>
+                               title={`Day ${c.day} | Forecast: ${c.fc || '-'} | Actual: ${c.ac || '-'}`}>
                               {c.result}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[11px] text-gray-300">Tidak ada data operasional di periode ini</span>
+                        <span className="text-[11px] text-gray-300">No operational data in this period</span>
                       )}
                     </td>
                   ) : (
@@ -208,7 +162,7 @@ export default function ForecastVsActual() {
                          ) : (
                            <span className="text-gray-400 italic flex items-center gap-1 text-[11px]">
                              <span className="w-3 border-b border-gray-400 inline-block mr-1"></span>
-                             Tidak ada plan
+                              No plan
                            </span>
                          )}
                       </td>
@@ -218,7 +172,7 @@ export default function ForecastVsActual() {
                          ) : (
                            <span className="text-gray-400 italic flex items-center gap-1 text-[11px]">
                              <span className="w-3 border-b border-gray-400 inline-block mr-1"></span>
-                             Kosong
+                              Empty
                            </span>
                          )}
                       </td>
@@ -235,7 +189,7 @@ export default function ForecastVsActual() {
                 </tr>
               )})}
               {analysis.rows.length === 0 && (
-                <tr><td colSpan={selectedDate === 'ALL' ? 4 : 6} className="text-center py-10 text-[12px] text-gray-400">Tidak ada kendaraan aktif di cabang ini.</td></tr>
+                <tr><td colSpan={selectedDate === 'ALL' ? 4 : 6} className="text-center py-10 text-[12px] text-gray-400">No active vehicles in this branch.</td></tr>
               )}
             </tbody>
           </table>

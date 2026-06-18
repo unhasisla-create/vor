@@ -198,6 +198,12 @@ export function FormField({ label, children }: { label: string; children: React.
 export const inputCls = 'w-full px-3.5 py-2.5 rounded-lg border border-slate-300 bg-white text-[13px] text-[#1E3A33] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent hover:border-slate-400 transition-all duration-200'
 export const selectCls = inputCls + ' appearance-none'
 
+// ── FilterPopup ──────────────────────────────────────────────────────────────
+export { default as FilterPopup } from './FilterPopup'
+
+// ── Styled Select ────────────────────────────────────────────────────────────
+export { default as Select } from './Select'
+
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 export function Skeleton({ className = '' }: { className?: string }) {
   return (

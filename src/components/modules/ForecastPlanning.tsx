@@ -3,7 +3,7 @@ import { useMemo, useEffect } from 'react'
 import { useVORStore } from '@/lib/store'
 import { BRANCHES, MONTH_NAMES, formatDateKey } from '@/lib/constants'
 import { getStatusColor, getTextColor, getActiveStatuses } from '@/lib/status-utils'
-import { PageHeader, Btn, Badge, KpiCard } from '@/components/ui'
+import { PageHeader, Btn, Badge, KpiCard, Select } from '@/components/ui'
 import { showToast } from '@/components/ui'
 import { getStoredUser } from '@/lib/auth-client'
 
@@ -39,7 +39,8 @@ export default function ForecastPlanning() {
 
   const doGenerate = () => {
     const n = generateForecastFromActual(branch)
-    showToast(`${n} unit draft SYSTEM berhasil di-generate.`)
+    if (n === 0) showToast('Tidak ada data actual hari ini untuk di-generate.', 'error')
+    else showToast(`${n} unit draft SYSTEM berhasil di-generate.`)
   }
 
   const handleChange = (vehicleId: number, status: string) => {
@@ -54,11 +55,10 @@ export default function ForecastPlanning() {
         subtitle={`Rencana operasional esok hari — ${MONTH_NAMES[tMonth-1]} ${tDay}, ${tYear}`}
         actions={
           <div className="flex gap-2 flex-wrap">
-            <select value={branch} onChange={e => setBranch(e.target.value)} disabled={!canSwitchBranch}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-[#5B8F82]">
+            <Select value={branch} onChange={v => setBranch(v)} disabled={!canSwitchBranch}>
               <option value="ALL">ALL — Semua Cabang</option>
               {branchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
-            </select>
+            </Select>
             {!canSwitchBranch && user?.branch !== 'ALL' ? (
               <span className="text-[11px] text-[#5B8F82] self-center">Cabang terkunci: {user?.branch}</span>
             ) : null}

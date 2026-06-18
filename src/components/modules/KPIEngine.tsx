@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { useVORStore } from '@/lib/store'
 import { BRANCHES, MONTH_NAMES } from '@/lib/constants'
 import { computeKPI, kpiBgStyle } from '@/lib/utils'
-import { PageHeader, KpiCard, Card, InfoBox } from '@/components/ui'
+import { PageHeader, KpiCard, Card, InfoBox, FilterPopup } from '@/components/ui'
 import { showToast } from '@/components/ui'
 import { exportKPIToXLSX } from '@/lib/export'
 import { Download } from 'lucide-react'
@@ -65,23 +65,7 @@ export default function KPIEngine() {
         subtitle="Kalkulasi otomatis PA, UA, dan Productivity per unit armada"
         actions={
           <div className="flex gap-2">
-            <select value={month} onChange={e => setMonth(+e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-              {MONTH_NAMES.map((m,i) => <option key={i+1} value={i+1}>{m}</option>)}
-            </select>
-            <select value={year} onChange={e => setYear(+e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400">
-              {[2024,2025,2026].map(y => <option key={y}>{y}</option>)}
-            </select>
-            <select value={effectiveBranch} onChange={e => setBranch(e.target.value)} disabled={!canSwitchBranch}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 disabled:opacity-50 disabled:cursor-not-allowed">
-              {canSwitchBranch && <option value="ALL">ALL — Semua Cabang</option>}
-              {branchOptions.map(b => <option key={b.id} value={b.code}>{b.code} — {b.name}</option>)}
-            </select>
-            {/* <button onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-[12px] bg-white hover:bg-slate-50 transition">
-              <Download size={13}/> Export XLSX
-            </button> */}
+            <FilterPopup hasActiveFilter={effectiveBranch !== 'ALL'} />
           </div>
         }
       />
