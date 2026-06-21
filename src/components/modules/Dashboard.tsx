@@ -2,7 +2,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useVORStore } from '@/lib/store'
 import { BRANCHES, MONTH_NAMES, formatDateKey, VEHICLE_TYPES, CUSTOMERS } from '@/lib/constants'
-import { getStatusColor, getStatusMeta, getActiveStatuses } from '@/lib/status-utils'
+import { getStatusColor, getStatusMeta, getAllStatuses } from '@/lib/status-utils'
 import { computeKPI } from '@/lib/utils'
 import { getStoredUser } from '@/lib/auth-client'
 import {
@@ -27,7 +27,7 @@ function formatDateLabel(iso: string) {
 }
 
 let _statusColors: Record<string,string> = {}
-getActiveStatuses().forEach((s: any) => { _statusColors[s.code] = s.color })
+getAllStatuses().forEach((s: any) => { _statusColors[s.code] = s.color })
 function getSC(code: string) { return _statusColors[code] ?? getStatusColor(code) }
 
 const todayISO = toIsoDate(new Date())
@@ -183,9 +183,16 @@ function TrendTooltip({ active, payload, label }: any) {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('Vehicle Performance')
-  const { month, year, setMonth, setYear, vehicles, statuses, branches, branch, setBranch, revenues, loadRevenues } = useVORStore()
+  const { month, year, setMonth, setYear, vehicles, statuses, branches, branch, setBranch, revenues, loadRevenues, kpiConfigs } = useVORStore()
   const user = getStoredUser()
   const canSwitchBranch = ['Admin', 'Management'].includes(user?.role ?? '')
+
+  const kpiThreshold = (metric: string) => {
+    const cfg = kpiConfigs.find((c: any) => c.metric === metric)
+    return { good: cfg?.goodThreshold ?? 90, warn: cfg?.warnThreshold ?? 75, label: cfg?.label ?? `Target ≥ 90%` }
+  }
+  const paCfg = kpiThreshold('PA')
+  const uaCfg = kpiThreshold('UA')
 
   useEffect(() => {
     if (user?.branch && user.branch !== 'ALL' && branch !== user.branch) {
@@ -460,12 +467,12 @@ export default function Dashboard() {
           {/* ─── Row 1: Primary Monthly KPIs ──────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
             <MetricCard label="Active Vehicle" value={totalActive} sub="operating units" color="#47766F" icon={Truck} />
-            <MetricCard label="Avg PA" value={`${avgPA}%`} sub={`Target ≥ 90% · ${MONTH_NAMES[month-1]} ${year}`}
-              color={parseFloat(avgPA)>=90?'#10b981':parseFloat(avgPA)>=75?'#f59e0b':'#E17055'} icon={CheckCircle2}
-              trend={parseFloat(avgPA)>=90?'up':parseFloat(avgPA)>=75?'flat':'down'} />
-            <MetricCard label="Avg UA" value={`${avgUA}%`} sub="Target ≥ 80%"
-              color={parseFloat(avgUA)>=80?'#10b981':parseFloat(avgUA)>=60?'#f59e0b':'#E17055'} icon={Activity}
-              trend={parseFloat(avgUA)>=80?'up':parseFloat(avgUA)>=60?'flat':'down'} />
+            <MetricCard label="Avg PA" value={`${avgPA}%`} sub={`${paCfg.label} · ${MONTH_NAMES[month-1]} ${year}`}
+              color={parseFloat(avgPA)>=paCfg.good?'#10b981':parseFloat(avgPA)>=paCfg.warn?'#f59e0b':'#E17055'} icon={CheckCircle2}
+              trend={parseFloat(avgPA)>=paCfg.good?'up':parseFloat(avgPA)>=paCfg.warn?'flat':'down'} />
+            <MetricCard label="Avg UA" value={`${avgUA}%`} sub={uaCfg.label}
+              color={parseFloat(avgUA)>=uaCfg.good?'#10b981':parseFloat(avgUA)>=uaCfg.warn?'#f59e0b':'#E17055'} icon={Activity}
+              trend={parseFloat(avgUA)>=uaCfg.good?'up':parseFloat(avgUA)>=uaCfg.warn?'flat':'down'} />
             <MetricCard label="Total Breakdown" value={totalBD} sub="unit-days this month"
               color={totalBD===0?'#10b981':'#E17055'} icon={AlertTriangle}
               trend={totalBD===0?'flat':'down'} />
@@ -635,7 +642,7 @@ export default function Dashboard() {
                 )}
 
                   <div className="flex flex-wrap gap-4 mt-auto pt-4 border-t border-slate-100">
-                    {[{ label:'Target PA', value:'≥ 90%', color:'#10b981' }, { label:'Target UA', value:'≥ 80%', color:'#47766F' }].map(t => (
+                    {[{ label:'Target PA', value: paCfg.label.replace('Target ', ''), color:'#10b981' }, { label:'Target UA', value: uaCfg.label.replace('Target ', ''), color:'#47766F' }].map(t => (
                       <div key={t.label} className="flex items-center gap-2">
                         <div className="w-5 h-0.5 rounded-full" style={{ background: t.color }} />
                         <span className="text-[11px] text-[#5B8F82]">{t.label}: <strong style={{ color: t.color }}>{t.value}</strong></span>
@@ -684,10 +691,10 @@ export default function Dashboard() {
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#E0F0EA', color: '#3D6B60', border: '1px solid #B8CEBC' }}>{b?.code ?? v.branchId}</span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="font-bold text-[12px]" style={{ color: kpiColor(pa, 90, 75) }}>{kpi.pa}%</span>
+                          <span className="font-bold text-[12px]" style={{ color: kpiColor(pa, paCfg.good, paCfg.warn) }}>{kpi.pa}%</span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="font-bold text-[12px]" style={{ color: kpiColor(ua, 80, 60) }}>{kpi.ua}%</span>
+                          <span className="font-bold text-[12px]" style={{ color: kpiColor(ua, uaCfg.good, uaCfg.warn) }}>{kpi.ua}%</span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="font-bold text-[12px]">{kpi.totalBD}</span>

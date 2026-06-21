@@ -11,6 +11,19 @@ const BRANCHES = [
   { name: 'Logistik Balikpapan', code: 'LBPP' },
 ]
 
+// ─── Helper: derive KPI flags from status code ────────────────────────────
+const PA_SET   = ['UTI','C','MB','RFU','RB','AM','BT','AS','BDJ-1','FM','BTJ','AB','TAD','TK','L','AT','LNR','KR','MT-IN','MT-OUT']
+const UA_SET   = ['UTI','C','MB','AM','BT','AS','BDJ-1','FM','BTJ','AB','L']
+const PROD_SET = ['UTI','C','MB','L']
+
+function statusFlags(code) {
+  return {
+    isPA:   PA_SET.includes(code),
+    isUA:   UA_SET.includes(code),
+    isPROD: PROD_SET.includes(code),
+  }
+}
+
 const STATUS_MASTER = [
   { code: 'UTI',   desc: 'Utilisasi',                  group: 'UTILISASI',       color: '#16a34a', isForecast: true,  details: 'Armada aktif dan sedang melakukan pengiriman atau tugas operasional.' },
   { code: 'C',     desc: 'Carry Over',                 group: 'UTILISASI',       color: '#15803d', isForecast: true,  details: 'Tugas yang dilanjutkan dari periode sebelumnya dan masih berjalan.' },
@@ -34,7 +47,7 @@ const STATUS_MASTER = [
   { code: 'KR',    desc: 'Karoseri',                   group: 'UNR',             color: '#374151', isForecast: true,  details: 'Armada sedang menjalani perbaikan bodi atau karoseri.' },
   { code: 'MT-IN', desc: 'Mutasi Masuk',               group: 'UNR',             color: '#9ca3af', isForecast: false, details: 'Unit masuk dari mutasi cabang lain dan sedang dalam proses penerimaan.' },
   { code: 'MT-OUT',desc: 'Mutasi Keluar',              group: 'UNR',             color: '#d1d5db', isForecast: false, details: 'Unit sedang dipindahkan ke cabang lain untuk operasional.' },
-]
+].map(s => ({ ...s, ...statusFlags(s.code) }))
 
 const VEHICLE_TYPES = ['BOX VAN', 'CDE BOX', 'CDD STANDAR', 'WINGBOX', 'FUSO']
 
@@ -158,11 +171,26 @@ const ljk = await prisma.branch.findUnique({ where: { code: 'LJK' } })
   for (const s of STATUS_MASTER) {
     await prisma.statusConfig.upsert({
       where: { code: s.code },
-      update: { desc: s.desc, group: s.group, color: s.color, details: s.details, isForecast: s.isForecast },
+      update: { desc: s.desc, group: s.group, color: s.color, details: s.details, isForecast: s.isForecast, isPA: s.isPA, isUA: s.isUA, isPROD: s.isPROD },
       create: s
     })
   }
   console.log('✅ Status Configs seeded')
+
+  // 3b. KPI Config
+  const kpiDefaults = [
+    { metric: 'PA',   label: 'Target ≥ 90%',  goodThreshold: 90, warnThreshold: 75 },
+    { metric: 'UA',   label: 'Target ≥ 80%',  goodThreshold: 80, warnThreshold: 60 },
+    { metric: 'PROD', label: 'Target ≥ 70%',  goodThreshold: 70, warnThreshold: 50 },
+  ]
+  for (const k of kpiDefaults) {
+    await prisma.kpiConfig.upsert({
+      where: { metric: k.metric },
+      update: k,
+      create: k,
+    })
+  }
+  console.log('✅ KPI Configs seeded')
 
   // 4. Vehicle Types
   for (const vt of VEHICLE_TYPES) {

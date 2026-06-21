@@ -134,6 +134,16 @@ export async function GET() {
     }
   }
 
+  const PA_SET   = ['UTI','C','MB','RFU','RB','AM','BT','AS','BDJ-1','FM','BTJ','AB','TAD','TK','L','AT','LNR','KR','MT-IN','MT-OUT']
+  const UA_SET   = ['UTI','C','MB','AM','BT','AS','BDJ-1','FM','BTJ','AB','L']
+  const PROD_SET = ['UTI','C','MB','L']
+
+  const statusFlags = (code: string) => ({
+    isPA:   PA_SET.includes(code),
+    isUA:   UA_SET.includes(code),
+    isPROD: PROD_SET.includes(code),
+  })
+
   const statusConfigs = [
     { code: 'UTI',   desc: 'Utilisasi',                  group: 'UTILISASI',       color: '#16a34a', isForecast: true,  sortOrder: 1,  details: 'Armada aktif dan sedang melakukan pengiriman atau tugas operasional.' },
     { code: 'C',     desc: 'Carry Over',                 group: 'UTILISASI',       color: '#15803d', isForecast: true,  sortOrder: 2,  details: 'Tugas yang dilanjutkan dari periode sebelumnya dan masih berjalan.' },
@@ -157,12 +167,26 @@ export async function GET() {
     { code: 'KR',    desc: 'Karoseri',                   group: 'UNR',             color: '#374151', isForecast: true,  sortOrder: 20, details: 'Armada sedang menjalani perbaikan bodi atau karoseri.' },
     { code: 'MT-IN', desc: 'Mutasi Masuk',               group: 'UNR',             color: '#9ca3af', isForecast: false, sortOrder: 21, details: 'Unit masuk dari mutasi cabang lain dan sedang dalam proses penerimaan.' },
     { code: 'MT-OUT',desc: 'Mutasi Keluar',              group: 'UNR',             color: '#d1d5db', isForecast: false, sortOrder: 22, details: 'Unit sedang dipindahkan ke cabang lain untuk operasional.' },
-  ]
+  ].map(s => ({ ...s, ...statusFlags(s.code) }))
+
   for (const sc of statusConfigs) {
     await prisma.statusConfig.upsert({
       where: { code: sc.code },
       update: sc,
       create: sc,
+    })
+  }
+
+  const kpiDefaults = [
+    { metric: 'PA',   label: 'Target ≥ 90%',  goodThreshold: 90, warnThreshold: 75 },
+    { metric: 'UA',   label: 'Target ≥ 80%',  goodThreshold: 80, warnThreshold: 60 },
+    { metric: 'PROD', label: 'Target ≥ 70%',  goodThreshold: 70, warnThreshold: 50 },
+  ]
+  for (const k of kpiDefaults) {
+    await prisma.kpiConfig.upsert({
+      where: { metric: k.metric },
+      update: k,
+      create: k,
     })
   }
 

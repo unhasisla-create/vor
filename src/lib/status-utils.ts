@@ -31,7 +31,35 @@ export function getTextColor(hex: string): string {
   return (r * 299 + g * 587 + b * 114) / 1000 > 140 ? '#111827' : '#ffffff'
 }
 
-export function getActiveStatuses() {
+export function getAllStatuses() {
   if (_cached) return _cached
   return STATUS_MASTER.map((s: any) => ({ ...s, isForecast: s.fc ?? true }))
+}
+
+export function getActiveStatuses() {
+  const all = getAllStatuses()
+  return all.filter((s: any) => s.isActive !== false)
+}
+
+export function getStatusFlags(code: string) {
+  const meta = source(code)
+  if (!meta) return { isPA: false, isUA: false, isPROD: false }
+  return {
+    isPA:   !!meta.isPA,
+    isUA:   !!meta.isUA,
+    isPROD: !!meta.isPROD,
+  }
+}
+
+export function getAllStatusFlags(): Record<string, { isPA: boolean; isUA: boolean; isPROD: boolean }> {
+  const result: Record<string, any> = {}
+  const list = getAllStatuses()
+  for (const s of list) {
+    result[s.code] = {
+      isPA:   !!s.isPA,
+      isUA:   !!s.isUA,
+      isPROD: !!s.isPROD,
+    }
+  }
+  return result
 }

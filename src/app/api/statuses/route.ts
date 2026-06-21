@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   if (session.role !== 'Admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
-  const { code, desc, group, color, details, isForecast, sortOrder } = body
+  const { code, desc, group, color, details, isForecast, sortOrder, isPA, isUA, isPROD } = body
   if (!code || !desc || !group || !color) {
     return NextResponse.json({ error: 'Code, desc, group, color wajib diisi.' }, { status: 400 })
   }
@@ -36,6 +36,9 @@ export async function POST(req: Request) {
         details: details ?? '',
         isForecast: isForecast ?? true,
         sortOrder: sortOrder ?? 0,
+        isPA: isPA ?? false,
+        isUA: isUA ?? false,
+        isPROD: isPROD ?? false,
       },
     })
     await prisma.auditLog.create({

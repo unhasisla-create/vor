@@ -8,7 +8,7 @@ export async function PATCH(req: Request, { params }: { params: { code: string }
   if (session.role !== 'Admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
-  const allowed = ['desc', 'group', 'color', 'details', 'isForecast', 'sortOrder', 'isActive']
+  const allowed = ['desc', 'group', 'color', 'details', 'isForecast', 'sortOrder', 'isActive', 'isPA', 'isUA', 'isPROD']
   const data: any = {}
   for (const key of allowed) {
     if (body[key] !== undefined) data[key] = body[key]

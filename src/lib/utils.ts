@@ -1,19 +1,28 @@
 import {
   BRANCHES, VEHICLE_TYPES, CUSTOMERS, DRIVERS,
-  STATUS_MASTER, daysInMonth, formatDateKey
+  daysInMonth, formatDateKey
 } from './constants'
+import { getStatusFlags, getAllStatuses } from './status-utils'
 import type { Vehicle, StatusMap, KPIResult, AuditLog } from './types'
 
 // ─── KPI ENGINE ───────────────────────────────────────────────────────────────
-const BD_REDUCERS = ['BD', 'BDJ+1']
-const UA_SET      = ['UTI','C','MB','AM','BT','AS','BDJ-1','FM','BTJ','AB','L']
-const PROD_SET    = ['UTI','C','MB','L']
-const UTIL_SET    = ['UTI','C','MB']
-const RFU_SET     = ['RFU','RB']
-const DELAY_SET   = ['AM','BT','AS','BDJ-1','FM','BTJ','AB']
-const DNA_SET     = ['TAD','TK']
-const NWD_SET     = ['L']
-const UNR_SET     = ['AT','LNR','KR','MT-IN','MT-OUT']
+function getCategorySets() {
+  const list = getAllStatuses()
+  const groups: Record<string, string[]> = {}
+  for (const s of list) {
+    const g = s.group || 'OTHER'
+    if (!groups[g]) groups[g] = []
+    groups[g].push(s.code)
+  }
+  return {
+    UTIL_SET:   groups['UTILISASI'] ?? [],
+    RFU_SET:    groups['READY FOR USE'] ?? [],
+    DELAY_SET:  groups['DELAY'] ?? [],
+    DNA_SET:    [...(groups['DNA (DS HO)'] ?? []), ...(groups['DNA (HC CABANG)'] ?? [])],
+    NWD_SET:    groups['NWD'] ?? [],
+    UNR_SET:    groups['UNR'] ?? [],
+  }
+}
 
 export function computeKPI(
   vehicleId: number,
@@ -23,7 +32,8 @@ export function computeKPI(
 ): KPIResult {
   const dim = daysInMonth(month, year)
   const vs = statuses[vehicleId] ?? {}
-  let filledDays = 0, bd = 0, ua = 0, prod = 0
+  const cats = getCategorySets()
+  let filledDays = 0, pa = 0, ua = 0, prod = 0
   const counts: Record<string, number> = {}
 
   for (let d = 1; d <= dim; d++) {
@@ -32,36 +42,27 @@ export function computeKPI(
     if (!s) continue
     filledDays++
     counts[s] = (counts[s] ?? 0) + 1
-    if (BD_REDUCERS.includes(s)) bd++
-    if (UA_SET.includes(s))      ua++
-    if (PROD_SET.includes(s))    prod++
+    const flags = getStatusFlags(s)
+    if (flags.isPA)   pa++
+    if (flags.isUA)   ua++
+    if (flags.isPROD) prod++
   }
 
-  // PA% = hari tidak breakdown ÷ total hari terisi
-  //     = (filledDays - BD) / filledDays
-  const paDen = filledDays
-  const pa = paDen > 0 ? (((paDen - bd) / paDen) * 100).toFixed(1) : '0.0'
-
-  // UA% = hari tersedia ÷ hari tidak breakdown
-  //     = UA / (filledDays - BD)
-  const uaDen = filledDays - bd
-  const uaVal = uaDen > 0 ? ((ua / uaDen) * 100).toFixed(1) : '0.0'
-
-  // Prod% = hari produktif ÷ hari tersedia
-  //       = Prod / UA
-  const prVal = ua > 0 ? ((prod / ua) * 100).toFixed(1) : '0.0'
+  const paVal  = filledDays > 0 ? ((pa   / filledDays) * 100).toFixed(1) : '0.0'
+  const uaVal  = pa > 0       ? ((ua   / pa)          * 100).toFixed(1) : '0.0'
+  const prVal  = ua > 0       ? ((prod / ua)          * 100).toFixed(1) : '0.0'
 
   return {
-    pa, ua: uaVal, prod: prVal,
+    pa: paVal, ua: uaVal, prod: prVal,
     filledDays,
     totalUTI:   counts['UTI'] ?? 0,
-    totalUTIL:  UTIL_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
-    totalRFU:   RFU_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
-    totalBD:    BD_REDUCERS.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
-    totalDELAY: DELAY_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
-    totalDNA:   DNA_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
-    totalNWD:   NWD_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
-    totalUNR:   UNR_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
+    totalUTIL:  cats.UTIL_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
+    totalRFU:   cats.RFU_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
+    totalBD:    (counts['BD'] ?? 0) + (counts['BDJ+1'] ?? 0),
+    totalDELAY: cats.DELAY_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
+    totalDNA:   cats.DNA_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
+    totalNWD:   cats.NWD_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
+    totalUNR:   cats.UNR_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),
     totalAMAB:  (counts['AM'] ?? 0) + (counts['AB'] ?? 0),
     counts,
   }

@@ -10,11 +10,19 @@ import { Download } from 'lucide-react'
 import { getStoredUser } from '@/lib/auth-client'
 
 export default function KPIEngine() {
-  const { month, year, branch, setMonth, setYear, setBranch, vehicles, statuses, branches } = useVORStore()
+  const { month, year, branch, setMonth, setYear, setBranch, vehicles, statuses, branches, kpiConfigs } = useVORStore()
   const user = getStoredUser()
   const canSwitchBranch = ['Admin', 'Management'].includes(user?.role ?? '')
   const userBranch = user?.branch ?? 'ALL'
   const effectiveBranch = canSwitchBranch ? branch : userBranch
+
+  const kpiThreshold = (metric: string) => {
+    const cfg = kpiConfigs.find((c: any) => c.metric === metric)
+    return { good: cfg?.goodThreshold ?? 90, warn: cfg?.warnThreshold ?? 75 }
+  }
+  const paCfg = kpiThreshold('PA')
+  const uaCfg = kpiThreshold('UA')
+  const prodCfg = kpiThreshold('PROD')
 
   const branchOptions = useMemo(() =>
     (branches.length ? branches : BRANCHES).filter(b => (!('isActive' in b) || b.isActive) && (canSwitchBranch || userBranch === 'ALL' || b.code === userBranch))
@@ -113,9 +121,9 @@ export default function KPIEngine() {
               </span>
             </div>
             {[
-              { label:'PA', val: bk.pa, g:90, w:75 },
-              { label:'UA', val: bk.ua, g:80, w:60 },
-              { label:'Prod', val: bk.prod, g:70, w:50 },
+              { label:'PA', val: bk.pa, g: paCfg.good, w: paCfg.warn },
+              { label:'UA', val: bk.ua, g: uaCfg.good, w: uaCfg.warn },
+              { label:'Prod', val: bk.prod, g: prodCfg.good, w: prodCfg.warn },
             ].map(x => (
               <div key={x.label} className="mb-2.5">
                 <div className="flex justify-between mb-1">
@@ -140,7 +148,7 @@ export default function KPIEngine() {
           <table className="w-full border-collapse text-[12px]">
             <thead>
               <tr style={{ background: '#5B8F82', color: '#fff' }}>
-                {['No','Nopol','Tipe','Cabang','∑UTI','∑RFU','∑BD','∑AM/AB','PA %','UA %','Prod %'].map(h => (
+                {['No','Nopol','Tipe','Cabang','UTI','RFU','BD','D','DNA','L','NR','PA%','UA%','Prod%'].map(h => (
                   <th key={h} className="px-3 py-3 text-left text-[11px] font-medium whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -159,15 +167,18 @@ export default function KPIEngine() {
                     <td className="px-3 py-2.5 text-center font-semibold">{kpi.totalUTI}</td>
                     <td className="px-3 py-2.5 text-center">{kpi.totalRFU}</td>
                     <td className="px-3 py-2.5 text-center font-bold" style={{ color: kpi.totalBD > 0 ? '#dc2626' : undefined }}>{kpi.totalBD}</td>
-                    <td className="px-3 py-2.5 text-center">{kpi.totalAMAB}</td>
-                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.pa,90,75) }}>
-                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.pa,90,75) }}>{kpi.pa}%</span>
+                    <td className="px-3 py-2.5 text-center" style={{ color: kpi.totalDELAY > 0 ? '#ea580c' : undefined }}>{kpi.totalDELAY}</td>
+                    <td className="px-3 py-2.5 text-center" style={{ color: kpi.totalDNA > 0 ? '#db2777' : undefined }}>{kpi.totalDNA}</td>
+                    <td className="px-3 py-2.5 text-center" style={{ color: kpi.totalNWD > 0 ? '#2563eb' : undefined }}>{kpi.totalNWD}</td>
+                    <td className="px-3 py-2.5 text-center" style={{ color: kpi.totalUNR > 0 ? '#6b7280' : undefined }}>{kpi.totalUNR}</td>
+                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.pa, paCfg.good, paCfg.warn) }}>
+                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.pa, paCfg.good, paCfg.warn) }}>{kpi.pa}%</span>
                     </td>
-                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.ua,80,60) }}>
-                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.ua,80,60) }}>{kpi.ua}%</span>
+                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.ua, uaCfg.good, uaCfg.warn) }}>
+                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.ua, uaCfg.good, uaCfg.warn) }}>{kpi.ua}%</span>
                     </td>
-                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.prod,70,50) }}>
-                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.prod,70,50) }}>{kpi.prod}%</span>
+                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.prod, prodCfg.good, prodCfg.warn) }}>
+                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.prod, prodCfg.good, prodCfg.warn) }}>{kpi.prod}%</span>
                     </td>
                   </tr>
                 )

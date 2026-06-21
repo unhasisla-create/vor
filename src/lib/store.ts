@@ -27,6 +27,10 @@ interface VORStore {
   setStatusConfigs: (configs: any[]) => void
   loadStatusConfigs: () => Promise<void>
 
+  kpiConfigs: any[]
+  setKpiConfigs: (configs: any[]) => void
+  loadKpiConfigs: () => Promise<void>
+
   vehicles: Vehicle[]
   statuses: StatusMap
   notes: NoteMap
@@ -92,6 +96,7 @@ export const useVORStore = create<VORStore>()(
       branches: [],
       revenues: [],
       statusConfigs: [],
+      kpiConfigs: [],
       _seeded: false,
 
       seed: () => {
@@ -105,6 +110,7 @@ export const useVORStore = create<VORStore>()(
         await get().loadFromServer()
         await get().loadBranches()
         await get().loadStatusConfigs()
+        await get().loadKpiConfigs()
         set({ isHydrated: true })
       },
 
@@ -131,6 +137,21 @@ export const useVORStore = create<VORStore>()(
         } catch {
           return
         }
+      },
+
+      loadKpiConfigs: async () => {
+        try {
+          const res = await fetch('/api/kpi-config', { credentials: 'include' })
+          if (!res.ok) return
+          const data = await res.json()
+          set({ kpiConfigs: data.configs ?? [] })
+        } catch {
+          return
+        }
+      },
+
+      setKpiConfigs: (configs) => {
+        set({ kpiConfigs: configs })
       },
 
       loadRevenues: async () => {

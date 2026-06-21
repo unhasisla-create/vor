@@ -122,8 +122,8 @@ export default function MasterData() {
   const [branchSearch, setBranchSearch] = useState('')
   const [userSearch, setUserSearch] = useState('')
   const [editingStatus, setEditingStatus] = useState<any>(null)
-  const [statusForm, setStatusForm] = useState({ desc: '', group: '', color: '', details: '', isForecast: true })
-  const [newStatusForm, setNewStatusForm] = useState({ code: '', desc: '', group: '', color: '#6b7280', details: '', isForecast: true })
+  const [statusForm, setStatusForm] = useState({ desc: '', group: '', color: '', details: '', isForecast: true, isPA: false, isUA: false, isPROD: false })
+  const [newStatusForm, setNewStatusForm] = useState({ code: '', desc: '', group: '', color: '#6b7280', details: '', isForecast: true, isPA: false, isUA: false, isPROD: false })
 
   const canManageBranches = currentUser && (currentUser.role === 'Admin')
   const canManageUsers = currentUser && (currentUser.role === 'Admin')
@@ -274,12 +274,14 @@ export default function MasterData() {
         setStatusConfigs(STATUS_MASTER.map((s: any) => ({
           code: s.code, desc: s.desc, group: s.group, color: s.color,
           details: s.details, isForecast: s.fc, sortOrder: 0, isActive: true,
+          isPA: s.isPA ?? false, isUA: s.isUA ?? false, isPROD: s.isPROD ?? false,
         })))
       }
     } catch {
       setStatusConfigs(STATUS_MASTER.map((s: any) => ({
         code: s.code, desc: s.desc, group: s.group, color: s.color,
         details: s.details, isForecast: s.fc, sortOrder: 0, isActive: true,
+        isPA: s.isPA ?? false, isUA: s.isUA ?? false, isPROD: s.isPROD ?? false,
       })))
     } finally {
       setStatusConfigLoading(false)
@@ -288,7 +290,7 @@ export default function MasterData() {
 
   const openEditStatus = (s: any) => {
     setEditingStatus(s)
-    setStatusForm({ desc: s.desc, group: s.group, color: s.color, details: s.details || '', isForecast: s.isForecast })
+    setStatusForm({ desc: s.desc, group: s.group, color: s.color, details: s.details || '', isForecast: s.isForecast, isPA: !!s.isPA, isUA: !!s.isUA, isPROD: !!s.isPROD })
     setStatusEditOpen(true)
   }
 
@@ -309,7 +311,7 @@ export default function MasterData() {
       }
       showToast(`Status "${newStatusForm.code}" berhasil dibuat.`)
       setStatusAddOpen(false)
-      setNewStatusForm({ code: '', desc: '', group: '', color: '#6b7280', details: '', isForecast: true })
+      setNewStatusForm({ code: '', desc: '', group: '', color: '#6b7280', details: '', isForecast: true, isPA: false, isUA: false, isPROD: false })
       loadStatusConfigs()
     } catch {
       showToast('Gagal membuat status.', 'error')
@@ -342,7 +344,16 @@ export default function MasterData() {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(statusForm),
+        body: JSON.stringify({
+          desc: statusForm.desc,
+          group: statusForm.group,
+          color: statusForm.color,
+          details: statusForm.details,
+          isForecast: statusForm.isForecast,
+          isPA: statusForm.isPA,
+          isUA: statusForm.isUA,
+          isPROD: statusForm.isPROD,
+        }),
       })
       if (!res.ok) { showToast('Gagal menyimpan status.', 'error'); return }
       showToast(`Status "${editingStatus.code}" berhasil diperbarui.`)
@@ -373,8 +384,23 @@ export default function MasterData() {
   }
 
   const kpiFlag = (code: string, key: 'pa' | 'ua' | 'prod') => {
-    const m = STATUS_MASTER.find(x => x.code === code)
-    return m ? m[key] : false
+    const s = statusConfigs.find((x: any) => x.code === code)
+    if (s) {
+      switch (key) {
+        case 'pa':   return !!s.isPA
+        case 'ua':   return !!s.isUA
+        case 'prod': return !!s.isPROD
+      }
+    }
+    const m = STATUS_MASTER.find((x: any) => x.code === code)
+    if (m) {
+      switch (key) {
+        case 'pa':   return !!m.isPA
+        case 'ua':   return !!m.isUA
+        case 'prod': return !!m.isPROD
+      }
+    }
+    return false
   }
 
   const filtered = useMemo(() =>
@@ -1653,6 +1679,23 @@ export default function MasterData() {
                 <span className="text-[12px] text-gray-600">Tampilkan di dropdown forecast</span>
               </label>
             </FormField>
+            <div className="col-span-2 border-t border-slate-200 pt-3 mt-1">
+              <p className="text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">KPI Flags</p>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={newStatusForm.isPA} onChange={e => setNewStatusForm(p => ({ ...p, isPA: e.target.checked }))} className="rounded" />
+                  <span className="text-[12px]"><span className="font-medium">PA</span> (Performance Achievement)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={newStatusForm.isUA} onChange={e => setNewStatusForm(p => ({ ...p, isUA: e.target.checked }))} className="rounded" />
+                  <span className="text-[12px]"><span className="font-medium">UA</span> (Unit Availability)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={newStatusForm.isPROD} onChange={e => setNewStatusForm(p => ({ ...p, isPROD: e.target.checked }))} className="rounded" />
+                  <span className="text-[12px]"><span className="font-medium">Prod</span> (Produktivitas)</span>
+                </label>
+              </div>
+            </div>
             <div className="col-span-2">
               <FormField label="Details / Tooltip">
                 <textarea className={inputCls + ' min-h-[72px]'} value={newStatusForm.details} onChange={e => setNewStatusForm(p => ({ ...p, details: e.target.value }))} />
@@ -1705,6 +1748,23 @@ export default function MasterData() {
                 <span className="text-[12px] text-gray-600">Tampilkan di dropdown forecast</span>
               </label>
             </FormField>
+            <div className="col-span-2 border-t border-slate-200 pt-3 mt-1">
+              <p className="text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">KPI Flags</p>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={statusForm.isPA} onChange={e => setStatusForm(p => ({ ...p, isPA: e.target.checked }))} className="rounded" />
+                  <span className="text-[12px]"><span className="font-medium">PA</span> (Performance Achievement)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={statusForm.isUA} onChange={e => setStatusForm(p => ({ ...p, isUA: e.target.checked }))} className="rounded" />
+                  <span className="text-[12px]"><span className="font-medium">UA</span> (Unit Availability)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={statusForm.isPROD} onChange={e => setStatusForm(p => ({ ...p, isPROD: e.target.checked }))} className="rounded" />
+                  <span className="text-[12px]"><span className="font-medium">Prod</span> (Produktivitas)</span>
+                </label>
+              </div>
+            </div>
             <div className="col-span-2">
               <FormField label="Details / Tooltip">
                 <textarea className={inputCls + ' min-h-[72px]'} value={statusForm.details} onChange={e => setStatusForm(p => ({ ...p, details: e.target.value }))} />

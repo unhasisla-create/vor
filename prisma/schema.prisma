@@ -148,16 +148,29 @@ model RevenueRecord {
 }
 
 model StatusConfig {
-  code        String   @id
-  desc        String
-  group       String
-  color       String
-  details     String?
-  isForecast  Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  code          String   @id
+  desc          String
+  group         String
+  color         String
+  details       String?
+  isForecast    Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  isPA      Boolean  @default(false)
+  isUA      Boolean  @default(false)
+  isPROD    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model KpiConfig {
+  id            String   @id @default(uuid())
+  metric        String   @unique
+  label         String
+  goodThreshold Float    @default(90)
+  warnThreshold Float    @default(75)
+  isActive      Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
 }
 
 model VehicleType {

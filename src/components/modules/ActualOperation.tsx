@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from 'react'
 import { useVORStore } from '@/lib/store'
 import { getStoredUser } from '@/lib/auth-client'
 import { BRANCHES, MONTH_NAMES, daysInMonth, formatDateKey } from '@/lib/constants'
-import { getStatusColor, getTextColor, getActiveStatuses } from '@/lib/status-utils'
+import { getStatusColor, getTextColor, getAllStatuses, getActiveStatuses } from '@/lib/status-utils'
 import { computeKPI, kpiBgStyle } from '@/lib/utils'
 import { PageHeader, Btn, ConfirmModal, Modal, FilterPopup } from '@/components/ui'
 import { showToast } from '@/components/ui'
@@ -49,7 +49,7 @@ function CellPopover({ vehicleId, day, nopol, onClose }: {
   }
 
   const monthName = MONTH_NAMES[month-1]
-  const selMeta = getActiveStatuses().find(s => s.code === sel)
+  const selMeta = getAllStatuses().find(s => s.code === sel)
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -107,8 +107,16 @@ function CellPopover({ vehicleId, day, nopol, onClose }: {
 
 // ── Main Module ───────────────────────────────────────────────────────────────
 export default function ActualOperation() {
-  const { month, year, branch, setMonth, setYear, setBranch, vehicles, statuses, notes, copyActualYesterday, copyActualRange, copyForecastYesterday, branches } = useVORStore()
+  const { month, year, branch, setMonth, setYear, setBranch, vehicles, statuses, notes, copyActualYesterday, copyActualRange, copyForecastYesterday, branches, kpiConfigs } = useVORStore()
   const user = getStoredUser()
+
+  const kpiThreshold = (metric: string) => {
+    const cfg = kpiConfigs.find((c: any) => c.metric === metric)
+    return { good: cfg?.goodThreshold ?? 90, warn: cfg?.warnThreshold ?? 75 }
+  }
+  const paCfg = kpiThreshold('PA')
+  const uaCfg = kpiThreshold('UA')
+  const prodCfg = kpiThreshold('PROD')
 
   const branchOptions = branches.length ? branches.filter(b => b.isActive ?? true) : BRANCHES
 
@@ -389,14 +397,14 @@ export default function ActualOperation() {
                   <td className="td-right">{kpi?.totalDNA ?? '–'}</td>
                   <td className="td-right">{kpi?.totalNWD ?? '–'}</td>
                   <td className="td-right">{kpi?.totalUNR ?? '–'}</td>
-                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.pa, 90, 75) }}>
-                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.pa)>=90?'#16a34a':parseFloat(kpi?.pa)>=75?'#ca8a04':'#dc2626' }}>{kpi?.pa}</span>
+                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.pa, paCfg.good, paCfg.warn) }}>
+                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.pa)>=paCfg.good?'#16a34a':parseFloat(kpi?.pa)>=paCfg.warn?'#ca8a04':'#dc2626' }}>{kpi?.pa}</span>
                   </td>
-                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.ua, 80, 60) }}>
-                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.ua)>=80?'#16a34a':parseFloat(kpi?.ua)>=60?'#ca8a04':'#dc2626' }}>{kpi?.ua}</span>
+                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.ua, uaCfg.good, uaCfg.warn) }}>
+                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.ua)>=uaCfg.good?'#16a34a':parseFloat(kpi?.ua)>=uaCfg.warn?'#ca8a04':'#dc2626' }}>{kpi?.ua}</span>
                   </td>
-                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.prod, 70, 50) }}>
-                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.prod)>=70?'#16a34a':parseFloat(kpi?.prod)>=50?'#ca8a04':'#dc2626' }}>{kpi?.prod}</span>
+                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.prod, prodCfg.good, prodCfg.warn) }}>
+                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.prod)>=prodCfg.good?'#16a34a':parseFloat(kpi?.prod)>=prodCfg.warn?'#ca8a04':'#dc2626' }}>{kpi?.prod}</span>
                   </td>
                 </tr>
               )
