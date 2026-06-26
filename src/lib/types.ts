@@ -64,7 +64,6 @@ export interface ForecastCell {
 export interface KPIResult {
   pa: string
   ua: string
-  prod: string
   filledDays: number
   totalUTI: number
   totalUTIL: number

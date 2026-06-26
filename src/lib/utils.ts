@@ -33,7 +33,7 @@ export function computeKPI(
   const dim = daysInMonth(month, year)
   const vs = statuses[vehicleId] ?? {}
   const cats = getCategorySets()
-  let filledDays = 0, pa = 0, ua = 0, prod = 0
+  let filledDays = 0, pa = 0, ua = 0
   const counts: Record<string, number> = {}
 
   for (let d = 1; d <= dim; d++) {
@@ -45,15 +45,14 @@ export function computeKPI(
     const flags = getStatusFlags(s)
     if (flags.isPA)   pa++
     if (flags.isUA)   ua++
-    if (flags.isPROD) prod++
   }
 
+  // PA% menggunakan filledDays sehingga proporsional dengan tanggal berjalan
   const paVal  = filledDays > 0 ? ((pa   / filledDays) * 100).toFixed(1) : '0.0'
-  const uaVal  = pa > 0       ? ((ua   / pa)          * 100).toFixed(1) : '0.0'
-  const prVal  = ua > 0       ? ((prod / ua)          * 100).toFixed(1) : '0.0'
+  const uaVal  = filledDays > 0 ? ((ua / filledDays) * 100).toFixed(1) : '0.0'
 
   return {
-    pa: paVal, ua: uaVal, prod: prVal,
+    pa: paVal, ua: uaVal,
     filledDays,
     totalUTI:   counts['UTI'] ?? 0,
     totalUTIL:  cats.UTIL_SET.reduce((sum, s) => sum + (counts[s] ?? 0), 0),

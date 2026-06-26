@@ -26,7 +26,7 @@ export async function exportActualToXLSX(
     'No', 'Nopol', 'Tipe', 'Tonase', 'Kubikasi', 'Customer', 'Driver',
     ...dayHeaders,
     'Utilisasi', 'Ready For Use', 'Breakdown', 'Delay', 'DNA', 'Libur', 'Unready',
-    'PA (%)', 'UA (%)', 'Productivity (%)',
+    'PA (%)', 'UA (%)',
   ]
 
   // ── Data rows ────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ export async function exportActualToXLSX(
         i + 1, v.nopol, v.type, v.tonase, v.kubikasi, v.customer, v.driver,
         ...dayData,
         kpi.totalUTIL, kpi.totalRFU, kpi.totalBD, kpi.totalDELAY, kpi.totalDNA, kpi.totalNWD, kpi.totalUNR,
-        parseFloat(kpi.pa), parseFloat(kpi.ua), parseFloat(kpi.prod),
+        parseFloat(kpi.pa), parseFloat(kpi.ua),
       ]
     })
 
@@ -56,7 +56,7 @@ export async function exportActualToXLSX(
     { wch: 14 }, { wch: 18 },
     ...Array(dim).fill({ wch: 5 }),
     { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 8 },
-    { wch: 8 }, { wch: 8 }, { wch: 12 },
+    { wch: 8 }, { wch: 8 },
   ]
 
   // ── Workbook ────────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ export async function exportActualToXLSX(
 export async function exportKPIToXLSX(
   rows: Array<{
     nopol: string; type: string; branch: string;
-    pa: string; ua: string; prod: string;
+    pa: string; ua: string;
     totalUTI: number; totalRFU: number; totalBD: number
   }>,
   month: number,
@@ -82,15 +82,15 @@ export async function exportKPIToXLSX(
 ): Promise<void> {
   const XLSX = await import('xlsx')
 
-  const headers = ['No', 'Nopol', 'Tipe', 'Cabang', '∑UTI', '∑RFU', '∑BD', 'PA (%)', 'UA (%)', 'Prod (%)']
+  const headers = ['No', 'Nopol', 'Tipe', 'Cabang', '∑UTI', '∑RFU', '∑BD', 'PA (%)', 'UA (%)']
   const data = rows.map((r, i) => [
     i + 1, r.nopol, r.type, r.branch,
     r.totalUTI, r.totalRFU, r.totalBD,
-    parseFloat(r.pa), parseFloat(r.ua), parseFloat(r.prod),
+    parseFloat(r.pa), parseFloat(r.ua),
   ])
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...data])
-  ws['!cols'] = [{ wch:4 },{ wch:14 },{ wch:18 },{ wch:10 },{ wch:7 },{ wch:7 },{ wch:7 },{ wch:8 },{ wch:8 },{ wch:8 }]
+  ws['!cols'] = [{ wch:4 },{ wch:14 },{ wch:18 },{ wch:10 },{ wch:7 },{ wch:7 },{ wch:7 },{ wch:8 },{ wch:8 }]
 
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, `KPI ${MONTH_NAMES[month-1]} ${year}`)

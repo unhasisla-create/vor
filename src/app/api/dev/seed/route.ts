@@ -126,22 +126,21 @@ export async function GET() {
     }
 
     if (targetPerUnit || achRevenue || bop) {
+      const recordDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}`
       await prisma.revenueRecord.upsert({
-        where: { month_year_branchId_nopol: { month: currentMonth, year: currentYear, branchId: branchCode, nopol: v.nopol } },
+        where: { date_branchId_nopol: { date: recordDate, branchId: branchCode, nopol: v.nopol } },
         update: { typeUnit: v.type, targetPerUnit, achRevenue, bop },
-        create: { month: currentMonth, year: currentYear, branchId: branchCode, nopol: v.nopol, typeUnit: v.type, targetPerUnit, achRevenue, bop },
+        create: { date: recordDate, branchId: branchCode, nopol: v.nopol, typeUnit: v.type, targetPerUnit, achRevenue, bop },
       })
     }
   }
 
   const PA_SET   = ['UTI','C','MB','RFU','RB','AM','BT','AS','BDJ-1','FM','BTJ','AB','TAD','TK','L','AT','LNR','KR','MT-IN','MT-OUT']
   const UA_SET   = ['UTI','C','MB','AM','BT','AS','BDJ-1','FM','BTJ','AB','L']
-  const PROD_SET = ['UTI','C','MB','L']
 
   const statusFlags = (code: string) => ({
     isPA:   PA_SET.includes(code),
     isUA:   UA_SET.includes(code),
-    isPROD: PROD_SET.includes(code),
   })
 
   const statusConfigs = [
@@ -180,7 +179,6 @@ export async function GET() {
   const kpiDefaults = [
     { metric: 'PA',   label: 'Target ≥ 90%',  goodThreshold: 90, warnThreshold: 75 },
     { metric: 'UA',   label: 'Target ≥ 80%',  goodThreshold: 80, warnThreshold: 60 },
-    { metric: 'PROD', label: 'Target ≥ 70%',  goodThreshold: 70, warnThreshold: 50 },
   ]
   for (const k of kpiDefaults) {
     await prisma.kpiConfig.upsert({

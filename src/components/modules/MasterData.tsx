@@ -383,13 +383,12 @@ export default function MasterData() {
     return (r*299 + g*587 + b*114) / 1000 > 140 ? '#111827' : '#ffffff'
   }
 
-  const kpiFlag = (code: string, key: 'pa' | 'ua' | 'prod') => {
+  const kpiFlag = (code: string, key: 'pa' | 'ua') => {
     const s = statusConfigs.find((x: any) => x.code === code)
     if (s) {
       switch (key) {
         case 'pa':   return !!s.isPA
         case 'ua':   return !!s.isUA
-        case 'prod': return !!s.isPROD
       }
     }
     const m = STATUS_MASTER.find((x: any) => x.code === code)
@@ -397,7 +396,6 @@ export default function MasterData() {
       switch (key) {
         case 'pa':   return !!m.isPA
         case 'ua':   return !!m.isUA
-        case 'prod': return !!m.isPROD
       }
     }
     return false
@@ -931,10 +929,6 @@ export default function MasterData() {
         }
       />
 
-      {/* <Tabs tabs={['Armada Kendaraan','Konfigurasi Status','Cabang','Driver','Customer','Pengguna']} active={tab} onChange={setTab} /> */}
-      {/* old Indonesian tab labels:
-          ['Armada Kendaraan','Konfigurasi Status','Cabang','Driver','Customer','Pengguna']
-      */}
       <Tabs tabs={['Vehicle', 'Status Configuration', 'Branch', 'Driver', 'Vehicle Type', 'Customer', 'User']} active={tab} onChange={setTab} />
 
 
@@ -1010,16 +1004,16 @@ export default function MasterData() {
             <table className="w-full border-collapse text-[12px]">
               <thead>
                 <tr style={{ background: '#5B8F82', color: '#fff' }}>
-                  {['Code','Status','Group','Description','Color','Forecast','PA','UA','Prod','Active','Action'].map(h => (
+                  {['Code','Status','Group','Description','Color','Forecast','PA','UA','Active','Action'].map(h => (
                     <th key={h} className="px-3 py-3 text-left text-[11px] font-medium whitespace-nowrap first:rounded-tl-2xl last:rounded-tr-2xl">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {statusConfigLoading ? (
-                  <SkeletonTable rows={4} cols={11} />
+                  <SkeletonTable rows={4} cols={10} />
                 ) : filteredStatuses.length === 0 ? (
-                  <tr><td colSpan={11} className="text-center py-8 text-[12px] text-gray-400">
+                  <tr><td colSpan={10} className="text-center py-8 text-[12px] text-gray-400">
                     <div className="flex flex-col items-center gap-2"><Inbox size={24} className="text-slate-300"/>No status data found.</div>
                   </td></tr>
                 ) : filteredStatuses.map((s, i) => (
@@ -1037,7 +1031,6 @@ export default function MasterData() {
                     </td>
                     <td className="px-3 py-2.5 text-center text-[13px]">{kpiFlag(s.code,'pa') ? <span className="text-green-600">{'\u2713'}</span> : <span className="text-red-300">{'\u2717'}</span>}</td>
                     <td className="px-3 py-2.5 text-center text-[13px]">{kpiFlag(s.code,'ua') ? <span className="text-green-600">{'\u2713'}</span> : <span className="text-red-300">{'\u2717'}</span>}</td>
-                    <td className="px-3 py-2.5 text-center text-[13px]">{kpiFlag(s.code,'prod') ? <span className="text-green-600">{'\u2713'}</span> : <span className="text-red-300">{'\u2717'}</span>}</td>
                     <td className="px-3 py-2.5"><Badge color={s.isActive ? 'green' : 'gray'}>{s.isActive ? 'Active' : 'Inactive'}</Badge></td>
                     <td className="px-3 py-2.5">
                       <div className="flex flex-wrap gap-1">
@@ -1690,10 +1683,7 @@ export default function MasterData() {
                   <input type="checkbox" checked={newStatusForm.isUA} onChange={e => setNewStatusForm(p => ({ ...p, isUA: e.target.checked }))} className="rounded" />
                   <span className="text-[12px]"><span className="font-medium">UA</span> (Unit Availability)</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={newStatusForm.isPROD} onChange={e => setNewStatusForm(p => ({ ...p, isPROD: e.target.checked }))} className="rounded" />
-                  <span className="text-[12px]"><span className="font-medium">Prod</span> (Produktivitas)</span>
-                </label>
+
               </div>
             </div>
             <div className="col-span-2">
@@ -1759,10 +1749,7 @@ export default function MasterData() {
                   <input type="checkbox" checked={statusForm.isUA} onChange={e => setStatusForm(p => ({ ...p, isUA: e.target.checked }))} className="rounded" />
                   <span className="text-[12px]"><span className="font-medium">UA</span> (Unit Availability)</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={statusForm.isPROD} onChange={e => setStatusForm(p => ({ ...p, isPROD: e.target.checked }))} className="rounded" />
-                  <span className="text-[12px]"><span className="font-medium">Prod</span> (Produktivitas)</span>
-                </label>
+
               </div>
             </div>
             <div className="col-span-2">

@@ -116,7 +116,7 @@ export default function ActualOperation() {
   }
   const paCfg = kpiThreshold('PA')
   const uaCfg = kpiThreshold('UA')
-  const prodCfg = kpiThreshold('PROD')
+
 
   const branchOptions = branches.length ? branches.filter(b => b.isActive ?? true) : BRANCHES
 
@@ -345,7 +345,7 @@ export default function ActualOperation() {
                   {d}
                 </th>
               ))}
-              {['UTI','RFU','BD','D','DNA','L','NR','PA%','UA%','Prod%'].map(h => (
+              {['Utilisasi','RFU','BD','DELAY','DNA','NWD','UNR','PA%','UA%'].map(h => (
                 <th key={h} className="th-right" style={{ width:54 }}>{h}</th>
               ))}
             </tr>
@@ -402,9 +402,6 @@ export default function ActualOperation() {
                   </td>
                   <td className="td-right" style={{ background: kpiBgStyle(kpi?.ua, uaCfg.good, uaCfg.warn) }}>
                     <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.ua)>=uaCfg.good?'#16a34a':parseFloat(kpi?.ua)>=uaCfg.warn?'#ca8a04':'#dc2626' }}>{kpi?.ua}</span>
-                  </td>
-                  <td className="td-right" style={{ background: kpiBgStyle(kpi?.prod, prodCfg.good, prodCfg.warn) }}>
-                    <span className="font-bold text-[10px]" style={{ color: parseFloat(kpi?.prod)>=prodCfg.good?'#16a34a':parseFloat(kpi?.prod)>=prodCfg.warn?'#ca8a04':'#dc2626' }}>{kpi?.prod}</span>
                   </td>
                 </tr>
               )

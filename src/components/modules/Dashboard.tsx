@@ -2,7 +2,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useVORStore } from '@/lib/store'
 import { BRANCHES, MONTH_NAMES, formatDateKey, VEHICLE_TYPES, CUSTOMERS } from '@/lib/constants'
-import { getStatusColor, getStatusMeta, getAllStatuses } from '@/lib/status-utils'
+import { getStatusColor, getStatusMeta, getAllStatuses, getStatusFlags } from '@/lib/status-utils'
 import { computeKPI } from '@/lib/utils'
 import { getStoredUser } from '@/lib/auth-client'
 import {
@@ -204,7 +204,11 @@ export default function Dashboard() {
 
   const branchOptions = branches.length ? branches.filter(b => b.isActive ?? true) : BRANCHES
 
-  const [selectedDate, setSelectedDate] = useState(() => toIsoDate(new Date()))
+  // Default: tanggal 1 bulan ini s.d hari ini (Month-to-Date)
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date()
+    return toIsoDate(new Date(now.getFullYear(), now.getMonth(), 1))
+  })
   const [dateEnd, setDateEnd] = useState(() => toIsoDate(new Date()))
 
   useEffect(() => {
@@ -245,10 +249,6 @@ export default function Dashboard() {
   }, [allKPIs, page, pageSize, sortByBD])
 
   const totalActive = filteredVehicles.length
-  const avgPA   = allKPIs.length ? (allKPIs.reduce((a,x) => a + parseFloat(x.kpi.pa), 0) / allKPIs.length).toFixed(1) : '0.0'
-  const avgUA   = allKPIs.length ? (allKPIs.reduce((a,x) => a + parseFloat(x.kpi.ua), 0) / allKPIs.length).toFixed(1) : '0.0'
-  const avgProd = allKPIs.length ? (allKPIs.reduce((a,x) => a + parseFloat(x.kpi.prod), 0) / allKPIs.length).toFixed(1) : '0.0'
-  const totalBD = allKPIs.reduce((a,x) => a + x.kpi.totalBD, 0)
 
   const formatRp = (num: number) => {
     if (!num) return 'Rp0'
@@ -267,6 +267,39 @@ export default function Dashboard() {
     }
     return keys
   }, [selectedDate, dateEnd])
+
+  // ── Agregasi dinamis PA / UA / BD sesuai dateRangeKeys dari filter ──────
+  const rangeKPI = useMemo(() => {
+    let totalPA = 0, totalUA = 0, totalBD = 0, totalFilled = 0
+    filteredVehicles.forEach(v => {
+      let vPA = 0, vUA = 0, vBD = 0, vFilled = 0
+      dateRangeKeys.forEach(dk => {
+        const code = statuses[v.id]?.[dk]
+        if (!code) return
+        vFilled++
+        const flags = getStatusFlags(code)
+        if (flags.isPA) vPA++
+        if (flags.isUA) vUA++
+        if (BD_CODES.includes(code)) vBD++
+      })
+      if (vFilled > 0) {
+        totalPA += (vPA / vFilled) * 100
+        totalUA += vFilled > 0 ? (vUA / vFilled) * 100 : 0
+        totalFilled++
+      }
+      totalBD += vBD
+    })
+    const n = totalFilled || 1
+    return {
+      avgPA: (totalPA / n).toFixed(1),
+      avgUA: (totalUA / n).toFixed(1),
+      totalBD,
+    }
+  }, [filteredVehicles, statuses, dateRangeKeys])
+
+  const avgPA = rangeKPI.avgPA
+  const avgUA = rangeKPI.avgUA
+  const totalBD = rangeKPI.totalBD
 
   const revenueDateKeys = useMemo(() => {
     const keys: string[] = []
@@ -437,7 +470,10 @@ export default function Dashboard() {
               Operational Dashboard
             </h2>
             <p className="text-[14px] mt-1 font-medium" style={{ color: '#5B8F82' }}>
-              {formatDateLabel(selectedDate)} · {activeTab === 'Vehicle Performance' ? `${filteredVehicles.length} active vehicle units` : `${revenueRecords.length} revenue records`}
+              {selectedDate === dateEnd
+                ? formatDateLabel(selectedDate)
+                : `${formatDateLabel(selectedDate).split(',')[0]} — ${formatDateLabel(dateEnd)}`
+              } · {activeTab === 'Vehicle Performance' ? `${filteredVehicles.length} active vehicle units` : `${revenueRecords.length} revenue records`}
             </p>
           </div>
 
@@ -449,7 +485,7 @@ export default function Dashboard() {
               onMouseLeave={e => e.currentTarget.style.background = 'rgba(91,143,130,0.15)'}>
               <Filter size={14} />
               <span>Filter Settings</span>
-              {(branch !== 'ALL' || selectedCustomer !== 'ALL' || selectedType !== 'ALL' || dateEnd !== selectedDate) && <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#5B8F82' }} />}
+              {(branch !== 'ALL' || selectedCustomer !== 'ALL' || selectedType !== 'ALL') && <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#5B8F82' }} />}
             </button>
           </div>
         </div>
@@ -467,13 +503,13 @@ export default function Dashboard() {
           {/* ─── Row 1: Primary Monthly KPIs ──────────────────────────────────── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
             <MetricCard label="Active Vehicle" value={totalActive} sub="operating units" color="#47766F" icon={Truck} />
-            <MetricCard label="Avg PA" value={`${avgPA}%`} sub={`${paCfg.label} · ${MONTH_NAMES[month-1]} ${year}`}
+            <MetricCard label="Avg PA" value={`${avgPA}%`} sub={`${paCfg.label} · ${dateRangeKeys.length} hari`}
               color={parseFloat(avgPA)>=paCfg.good?'#10b981':parseFloat(avgPA)>=paCfg.warn?'#f59e0b':'#E17055'} icon={CheckCircle2}
               trend={parseFloat(avgPA)>=paCfg.good?'up':parseFloat(avgPA)>=paCfg.warn?'flat':'down'} />
-            <MetricCard label="Avg UA" value={`${avgUA}%`} sub={uaCfg.label}
+            <MetricCard label="Avg UA" value={`${avgUA}%`} sub={`${uaCfg.label} · ${dateRangeKeys.length} hari`}
               color={parseFloat(avgUA)>=uaCfg.good?'#10b981':parseFloat(avgUA)>=uaCfg.warn?'#f59e0b':'#E17055'} icon={Activity}
               trend={parseFloat(avgUA)>=uaCfg.good?'up':parseFloat(avgUA)>=uaCfg.warn?'flat':'down'} />
-            <MetricCard label="Total Breakdown" value={totalBD} sub="unit-days this month"
+            <MetricCard label="Total Breakdown" value={totalBD} sub={`unit-days · ${dateRangeKeys.length} hari`}
               color={totalBD===0?'#10b981':'#E17055'} icon={AlertTriangle}
               trend={totalBD===0?'flat':'down'} />
           </div>
@@ -482,7 +518,7 @@ export default function Dashboard() {
           <ChartCard className="mb-5">
             <SectionHeader
               title="Daily Utilization Trend"
-              sub={`Percentage of operational vehicle (non-breakdown) per day · ${MONTH_NAMES[month-1]} ${year}`}
+              sub={`Percentage of operational vehicle (non-breakdown) per day · ${MONTH_NAMES[month-1]} ${year} (${dateRangeKeys.length} hari)`}
             />
             <div className="h-[220px]">
               {dailyTrend.some(d => d.activeFleet > 0) ? (
@@ -605,7 +641,7 @@ export default function Dashboard() {
             <ChartCard className="h-full">
               <SectionHeader
                 title="KPI Performance per Branch"
-                sub={`Monthly average PA, UA, and Productivity · ${MONTH_NAMES[month-1]} ${year}`}
+                sub={`Average PA and UA per branch · ${selectedDate === dateEnd ? formatDateLabel(selectedDate).split(',')[0] : `${formatDateLabel(selectedDate).split(',')[0]} — ${formatDateLabel(dateEnd)}`}`}
               />
               <div className="flex-1 min-h-[360px] flex flex-col">
                 {branchData.length > 0 ? (
@@ -654,12 +690,191 @@ export default function Dashboard() {
 
           </div>
 
+{/* ─── Vehicle Status Composition ─────────────────────────────────────── */}
+<ChartCard className="mb-5 mt-5">
+  <SectionHeader
+    title="Vehicle Status Composition"
+    sub={`Distribution of all vehicle-days by status group · ${selectedDate === dateEnd ? formatDateLabel(selectedDate).split(',')[0] : `${formatDateLabel(selectedDate).split(',')[0]} — ${formatDateLabel(dateEnd).split(',')[0]}`}`}
+  />
+  {(() => {
+    const groups = [
+      { key: 'UTILISASI',     label: 'UA (UTILISASI)', color: '#16a34a', owner: 'Operasional' },
+      { key: 'READY FOR USE', label: 'READY FOR USE',  color: '#f59e0b', owner: 'Operasional' },
+      { key: 'BREAKDOWN',     label: 'BREAKDOWN',      color: '#dc2626', owner: 'Maintenance' },
+      { key: 'DELAY',         label: 'DELAY',          color: '#f97316', owner: 'Admin / BOP' },
+      { key: 'DNA',           label: 'DNA',            color: '#ec4899', owner: 'HR / Driver' },
+      { key: 'NWD',           label: 'LIBUR (NWD)',    color: '#8b5cf6', owner: 'Terjadwal' },
+      { key: 'UNR',           label: 'NOT READY',      color: '#94a3b8', owner: 'Admin / Legal' },
+    ]
+    const dnaCount = (statusGroups['DNA (DS HO)'] ?? 0) + (statusGroups['DNA (HC CABANG)'] ?? 0)
+    const raw: Record<string, number> = {}
+    groups.forEach(g => {
+      if (g.key === 'DNA') raw[g.key] = dnaCount
+      else raw[g.key] = statusGroups[g.key] ?? 0
+    })
+    const total = Object.values(raw).reduce((a, b) => a + b, 0)
+    const data = groups.map(g => ({
+      ...g,
+      pct: total > 0 ? ((raw[g.key] / total) * 100).toFixed(0) : '0',
+      value: raw[g.key],
+    }))
+
+    if (total === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10 gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center">
+            <Activity size={24} className="text-[#A8CBBF]" />
+          </div>
+          <p className="text-[13px] text-[#7A9E94] font-medium">No status data for this period</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col lg:flex-row items-center gap-6">
+
+        {/* Donut chart */}
+        <div className="relative w-[400px] h-[400px] flex-shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={58}
+                outerRadius={90}
+                dataKey="value"
+                stroke="none"
+                cornerRadius={3}
+                paddingAngle={2}
+              >
+                {data.map((entry, idx) => (
+                  <Cell key={idx} fill={entry.value > 0 ? entry.color : entry.color + '22'} />
+                ))}
+              </Pie>
+
+              {/* ✅ Center label pakai SVG text — berada di bawah layer tooltip HTML */}
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{ fontSize: 26, fontWeight: 600, fill: '#1e293b' }}
+              >
+                {total.toLocaleString()}
+              </text>
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{ fontSize: 10, fill: '#94a3b8', letterSpacing: '0.05em' }}
+              >
+                Total Status
+              </text>
+
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null
+                  const d = payload[0].payload
+                  const pct = total > 0 ? ((d.value / total) * 100).toFixed(1) : '0.0'
+                  return (
+                    <div style={{
+                      background: 'rgba(15,23,42,0.88)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 14,
+                      padding: '8px 12px',
+                      boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
+                    }}>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginBottom: 4 }}>{d.label}</p>
+                      <p style={{ color: d.color, fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>
+                        {d.value} <span style={{ fontSize: 11, fontWeight: 400, color: 'rgba(255,255,255,0.5)' }}>status</span>
+                      </p>
+                      <p style={{ color: '#60a5fa', fontSize: 12, fontWeight: 600, marginTop: 2 }}>{pct}%</p>
+                    </div>
+                  )
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+
+          {/* ✅ Div absolut center label DIHAPUS dari sini */}
+        </div>
+
+        {/* Legend rows */}
+        <div className="flex-1 w-full space-y-1">
+          {data.map(item => (
+            <div
+              key={item.key}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-slate-50 group"
+            >
+              {/* Color dot */}
+              <div
+                className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                style={{ background: item.color, opacity: item.value > 0 ? 1 : 0.3 }}
+              />
+
+              {/* Label + meta */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-3">
+                  <span
+                    className="text-[12px] font-medium tracking-wide"
+                    style={{ color: item.value > 0 ? '#334155' : '#94a3b8' }}
+                  >
+                    {item.label}
+                  </span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className="text-[11px] tabular-nums"
+                      style={{ color: item.value > 0 ? '#64748b' : '#cbd5e1' }}
+                    >
+                      {item.value} status
+                    </span>
+                    <span
+                      className="text-[12px] font-semibold tabular-nums w-9 text-right"
+                      style={{ color: item.value > 0 ? item.color : '#cbd5e1' }}
+                    >
+                      {item.pct}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress bar + owner badge */}
+                <div className="flex items-center gap-2 mt-1.5">
+                  <div className="flex-1 h-[3px] rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${item.pct}%`, background: item.color, opacity: item.value > 0 ? 1 : 0.2 }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-normal flex-shrink-0 min-w-[70px] text-right">
+                    {item.owner}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Footer total */}
+          <div className="flex items-center justify-between pt-2.5 mt-1 border-t border-slate-100 px-3">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Total</span>
+            <span className="text-[12px] font-semibold text-slate-700">{total.toLocaleString()} status</span>
+          </div>
+        </div>
+
+      </div>
+    )
+  })()}
+</ChartCard>
+
+
           {/* ─── Vehicle Performance Table ──────────────────────────────────────── */}
           <div className="bg-white rounded-2xl overflow-hidden mt-5"
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 8px_32px rgba(0,0,0,0.04)', border:'1px solid rgba(0,0,0,0.06)' }}>
             <div className="px-6 py-5 border-b border-slate-100">
               <h3 className="text-[14px] font-bold text-[#2C4A42]">Vehicle Performance</h3>
-              <p className="text-[12px] text-[#7A9E94] mt-0.5">KPI Details per vehicle unit · {MONTH_NAMES[month-1]} {year}</p>
+              <p className="text-[12px] text-[#7A9E94] mt-0.5">KPI Details per vehicle unit · {MONTH_NAMES[month-1]} {year} ({dateRangeKeys.length} hari)</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-[12px]">

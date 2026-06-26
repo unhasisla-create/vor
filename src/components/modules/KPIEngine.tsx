@@ -22,7 +22,7 @@ export default function KPIEngine() {
   }
   const paCfg = kpiThreshold('PA')
   const uaCfg = kpiThreshold('UA')
-  const prodCfg = kpiThreshold('PROD')
+
 
   const branchOptions = useMemo(() =>
     (branches.length ? branches : BRANCHES).filter(b => (!('isActive' in b) || b.isActive) && (canSwitchBranch || userBranch === 'ALL' || b.code === userBranch))
@@ -45,7 +45,6 @@ export default function KPIEngine() {
       total: bKPIs.length,
       pa:   (bKPIs.reduce((a,x) => a + parseFloat(x.kpi.pa),   0) / n).toFixed(1),
       ua:   (bKPIs.reduce((a,x) => a + parseFloat(x.kpi.ua),   0) / n).toFixed(1),
-      prod: (bKPIs.reduce((a,x) => a + parseFloat(x.kpi.prod), 0) / n).toFixed(1),
       bd:   bKPIs.reduce((a,x) => a + x.kpi.totalBD, 0),
     }
   }), [allKPIs, branchOptions])
@@ -58,7 +57,7 @@ export default function KPIEngine() {
       const rows = allKPIs.map(({ v, kpi }) => ({
         nopol: v.nopol, type: v.type,
         branch: branchOptions.find(b => b.code === v.branchId)?.code ?? v.branchId,
-        pa: kpi.pa, ua: kpi.ua, prod: kpi.prod,
+        pa: kpi.pa, ua: kpi.ua,
         totalUTI: kpi.totalUTI, totalRFU: kpi.totalRFU, totalBD: kpi.totalBD,
       }))
       await exportKPIToXLSX(rows, month, year)
@@ -70,42 +69,13 @@ export default function KPIEngine() {
     <div>
       <PageHeader
         title="KPI Engine"
-        subtitle="Kalkulasi otomatis PA, UA, dan Productivity per unit armada"
+        subtitle="Kalkulasi otomatis PA dan UA per unit armada"
         actions={
           <div className="flex gap-2">
             <FilterPopup hasActiveFilter={effectiveBranch !== 'ALL'} />
           </div>
         }
       />
-
-      <InfoBox type="blue">
-        <div className="text-[11px] leading-relaxed">
-          <strong>Formula KPI yang digunakan:</strong>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
-            <div className="bg-white/60 rounded-lg px-3 py-2 border border-teal-100">
-              <span className="font-bold text-teal-700">PA%</span>
-              <br />= (Hari Terisi − ∑BD) ÷ Hari Terisi × 100%
-              <br /><span className="text-[10px] text-gray-400">Hari tidak breakdown dari total hari yang terisi data</span>
-            </div>
-            <div className="bg-white/60 rounded-lg px-3 py-2 border border-teal-100">
-              <span className="font-bold text-emerald-700">UA%</span>
-              <br />= UA ÷ (Hari Terisi − ∑BD) × 100%
-              <br /><span className="text-[10px] text-gray-400">Hari tersedia dari hari yang bukan breakdown</span>
-            </div>
-            <div className="bg-white/60 rounded-lg px-3 py-2 border border-teal-100">
-              <span className="font-bold text-amber-700">Prod%</span>
-              <br />= Prod ÷ UA × 100%
-              <br /><span className="text-[10px] text-gray-400">Hari produktif dari hari yang tersedia (UA)</span>
-            </div>
-          </div>
-          <div className="mt-2 text-[10px] text-gray-400">
-            <strong>UA</strong> = UTI + C + MB + AM + BT + AS + BDJ-1 + FM + BTJ + AB + L &nbsp;|&nbsp;
-            <strong>Prod</strong> = UTI + C + MB + L &nbsp;|&nbsp;
-            <strong>∑BD</strong> = BD + BDJ+1 &nbsp;|&nbsp;
-            <strong>Hari Terisi</strong> = jumlah hari yang sudah diisi data status
-          </div>
-        </div>
-      </InfoBox>
 
       {/* Branch summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-5">
@@ -123,7 +93,7 @@ export default function KPIEngine() {
             {[
               { label:'PA', val: bk.pa, g: paCfg.good, w: paCfg.warn },
               { label:'UA', val: bk.ua, g: uaCfg.good, w: uaCfg.warn },
-              { label:'Prod', val: bk.prod, g: prodCfg.good, w: prodCfg.warn },
+
             ].map(x => (
               <div key={x.label} className="mb-2.5">
                 <div className="flex justify-between mb-1">
@@ -148,7 +118,7 @@ export default function KPIEngine() {
           <table className="w-full border-collapse text-[12px]">
             <thead>
               <tr style={{ background: '#5B8F82', color: '#fff' }}>
-                {['No','Nopol','Tipe','Cabang','UTI','RFU','BD','D','DNA','L','NR','PA%','UA%','Prod%'].map(h => (
+                {['No','Nopol','Tipe','Cabang','Utilisasi','RFU','BD','DELAY','DNA','NWD','UNR','PA%','UA%'].map(h => (
                   <th key={h} className="px-3 py-3 text-left text-[11px] font-medium whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -176,9 +146,6 @@ export default function KPIEngine() {
                     </td>
                     <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.ua, uaCfg.good, uaCfg.warn) }}>
                       <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.ua, uaCfg.good, uaCfg.warn) }}>{kpi.ua}%</span>
-                    </td>
-                    <td className="px-3 py-2.5 text-center" style={{ background: kpiBgStyle(kpi.prod, prodCfg.good, prodCfg.warn) }}>
-                      <span className="font-bold text-[11px]" style={{ color: kpiColor(kpi.prod, prodCfg.good, prodCfg.warn) }}>{kpi.prod}%</span>
                     </td>
                   </tr>
                 )

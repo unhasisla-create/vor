@@ -156,20 +156,22 @@ Prod = UTI(10) + L(2) = 12 hari
 
 **Rekomendasi:** ✅ Pakai rumus bos. Ini lebih akurat secara bisnis.
 
-### D.2 Formula UA% — Tetap
+### D.2 Formula UA% — Diubah (sesuai diskusi 24 Juni 2026)
 
 ```
-UA% = (UA / (effectiveDays - BD)) × 100
+UA% = (UA / effectiveDays) × 100
 ```
 
-Ini sudah benar. Maknanya: dari hari-hari yang bukan breakdown, berapa persen unit tersedia? Tidak perlu diubah.
+**Perubahan:** Denominator dari `(effectiveDays - BD)` → `effectiveDays` (total hari terisi).
+
+**Alasan:** UA dan PA kini merupakan indikator terpisah dengan denominator yang sama (total hari terisi). Status yang dicentang di konfigurasi UA menjadi penambah %; status yang tidak dicentang (termasuk BD) otomatis menjadi pengurang. Sehingga nilai UA% = persentase donut UTILISASI pada Vehicle Status Composition.
 
 ### D.3 Rumus Final v2.0
 
 | Metrik | Rumus | Denominator |
 |--------|-------|-------------|
 | **PA%** | (effectiveDays - BD) / effectiveDays × 100 | Total hari |
-| **UA%** | UA / (effectiveDays - BD) × 100 | Hari non-BD |
+| **UA%** | UA / effectiveDays × 100 | Total hari (BARU) |
 | **Prod%** | **Prod / UA × 100** ✅ | **Hari UA (BARU)** |
 
 ---
