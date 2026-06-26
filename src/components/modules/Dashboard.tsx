@@ -757,6 +757,7 @@ export default function Dashboard() {
               <text
                 x="50%"
                 y="50%"
+                dy="-5"
                 textAnchor="middle"
                 dominantBaseline="middle"
                 style={{ fontSize: 26, fontWeight: 600, fill: '#1e293b' }}
@@ -766,6 +767,7 @@ export default function Dashboard() {
               <text
                 x="50%"
                 y="50%"
+                dy="20"
                 textAnchor="middle"
                 dominantBaseline="middle"
                 style={{ fontSize: 10, fill: '#94a3b8', letterSpacing: '0.05em' }}
