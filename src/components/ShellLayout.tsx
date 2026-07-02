@@ -128,26 +128,15 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen">
       {/* ── Sidebar ────────────────────────────────────────────────────────── */}
       <aside className="w-[230px] flex-shrink-0 flex flex-col fixed top-0 left-0 h-screen z-50"
-        style={{ background: 'linear-gradient(180deg, #E8F0EC 0%, #DCE8E2 50%, #D2E0D9 100%)', borderRight: '1px solid #C4D8CC' }}>
+        style={{ background: '#0F5E4F', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
 
         {/* Brand */}
-        <div className="px-5 py-5 border-b" style={{ borderColor: '#B8CEBC' }}>
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(91,143,130,0.15)', border: '1px solid rgba(91,143,130,0.3)' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5B8F82" strokeWidth="1.5">
-                <rect x="1" y="3" width="15" height="13" rx="2"/>
-                <path d="M16 8h4l3 4v5h-7V8z"/>
-                <circle cx="5.5" cy="18.5" r="2.5"/>
-                <circle cx="18.5" cy="18.5" r="2.5"/>
-              </svg>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-widest leading-none" style={{ color: '#7A9E94' }}>VOR System</p>
-              <h1 className="text-[15px] font-bold tracking-tight leading-tight" style={{ color: '#2C4A42' }}>Dynamic Oasis</h1>
-            </div>
-          </div>
-          <p className="text-[10px] mt-1" style={{ color: '#8FAE9F' }}>v1.05 — Vehicle Monitoring</p>
+        <div className="border-b flex items-center justify-center" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <img
+            src="/logo-vor-white.svg"
+            alt="VOR Logo"
+            className="w-full max-w-[180px] h-auto"
+          />
         </div>
 
         {/* Nav */}
@@ -159,7 +148,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
               <div key={item.href}>
                 {item.section && (
                   <p className="text-[9px] uppercase tracking-[1.5px] px-2 pt-3 pb-1 mt-1"
-                    style={{ color: '#8FAE9F' }}>
+                    style={{ color: 'rgba(255,255,255,0.4)' }}>
                     {item.section}
                   </p>
                 )}
@@ -167,10 +156,10 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
                   className={`flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg mb-0.5 text-[13px] transition-all
                     ${active
                       ? 'font-semibold'
-                      : 'font-normal hover:bg-white/50'}`}
+                      : 'font-normal hover:bg-white/10'}`}
                   style={active
-                    ? { background: 'rgba(91,143,130,0.2)', color: '#2C4A42', boxShadow: 'inset 3px 0 0 #5B8F82' }
-                    : { color: '#4A6B60' }
+                    ? { background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', boxShadow: 'inset 3px 0 0 rgba(255,255,255,0.5)' }
+                    : { color: 'rgba(255,255,255,0.75)' }
                   }>
                   <Icon size={15} style={{ opacity: active ? 1 : 0.6 }} />
                   {item.label}
@@ -181,11 +170,11 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* User footer */}
-        <div className="px-4 py-3.5" style={{ borderTop: '1px solid #B8CEBC' }}>
+        <div className="px-4 py-3.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center justify-between mb-2">
             <div>
-              <p className="text-[10px]" style={{ color: '#8FAE9F' }}>Logged in as</p>
-              <p className="text-[13px] font-semibold mt-0.5" style={{ color: '#2C4A42' }}>{user.name}</p>
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.45)' }}>Logged in as</p>
+              <p className="text-[13px] font-semibold mt-0.5" style={{ color: '#FFFFFF' }}>{user.name}</p>
               <p className="text-[11px] mt-0.5 font-medium" style={{ color: roleColor[user.role] ?? '#5B8F82' }}>
                 ● {user.role} {user.branch !== 'ALL' ? `— ${user.branch}` : '— All Branch'}
               </p>
@@ -193,9 +182,9 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
           </div>
           <button onClick={handleLogout}
             className="flex items-center gap-2 w-full px-2.5 py-2 rounded-lg transition text-[12px]"
-            style={{ color: '#7A9E94' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(91,143,130,0.12)'; e.currentTarget.style.color = '#2C4A42' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#7A9E94' }}>
+            style={{ color: 'rgba(255,255,255,0.55)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.55)' }}>
             <LogOut size={13} />
             Logout
           </button>

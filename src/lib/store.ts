@@ -235,7 +235,10 @@ export const useVORStore = create<VORStore>()(
         }))
         const v = get().vehicles.find(x => x.id === vehicleId)
         get().addAudit('Update Status', `${v?.nopol} - ${date}: ${status}${note ? ` (${note})` : ''}`)
-        postJson('/api/actuals', { vehicleId, date, status, note }).catch(() => get().loadFromServer().catch(() => {}))
+        postJson('/api/actuals', { vehicleId, date, status, note }).catch(() => {
+          get().loadFromServer().catch(() => {})
+          showToast('Gagal menyimpan status ke server.', 'error')
+        })
       },
 
       copyActualYesterday: (branchId) => {
@@ -262,7 +265,12 @@ export const useVORStore = create<VORStore>()(
 
         set({ statuses, notes })
         get().addAudit('Copy Actual Yesterday', `Branch ${branchId} - ${copied} unit disalin`)
-        postJson('/api/actuals/copy-actual-yesterday', { branchId }).then(() => get().loadFromServer()).catch(() => {})
+        postJson('/api/actuals/copy-actual-yesterday', { branchId })
+          .then(() => get().loadFromServer())
+          .catch(() => {
+            get().loadFromServer()
+            showToast('Gagal menyimpan copy actual ke server. Data dikembalikan seperti sebelumnya.', 'error')
+          })
         return copied
       },
 
@@ -303,7 +311,11 @@ export const useVORStore = create<VORStore>()(
         set({ statuses, notes })
         get().addAudit('Copy Actual Range', `Branch ${branchId} ${sourceDate} → ${targetStartDate}..${targetEndDate} - ${copied} sel disalin`)
         postJson('/api/actuals/copy-actual-range', { branchId, sourceDate, targetStartDate, targetEndDate })
-          .then(() => get().loadFromServer()).catch(() => {})
+          .then(() => get().loadFromServer())
+          .catch(() => {
+            get().loadFromServer()
+            showToast('Gagal menyimpan copy actual ke server. Data dikembalikan seperti sebelumnya.', 'error')
+          })
         return copied
       },
 
@@ -326,7 +338,12 @@ export const useVORStore = create<VORStore>()(
 
         set({ statuses })
         get().addAudit('Copy Forecast Yesterday', `Branch ${branchId} - ${copied} unit dari forecast`)
-        postJson('/api/actuals/copy-forecast-yesterday', { branchId }).then(() => get().loadFromServer()).catch(() => {})
+        postJson('/api/actuals/copy-forecast-yesterday', { branchId })
+          .then(() => get().loadFromServer())
+          .catch(() => {
+            get().loadFromServer()
+            showToast('Gagal menyimpan copy forecast ke server. Data dikembalikan seperti sebelumnya.', 'error')
+          })
         return copied
       },
 
@@ -339,7 +356,10 @@ export const useVORStore = create<VORStore>()(
         }))
         const v = get().vehicles.find(x => x.id === vehicleId)
         get().addAudit('Update Forecast', `${v?.nopol} - ${dateKey}: ${status} [MANUAL]`)
-        postJson('/api/forecasts', { vehicleId, date: dateKey, status, confidence: 'MANUAL' }).catch(() => get().loadFromServer().catch(() => {}))
+        postJson('/api/forecasts', { vehicleId, date: dateKey, status, confidence: 'MANUAL' }).catch(() => {
+          get().loadFromServer().catch(() => {})
+          showToast('Gagal menyimpan forecast ke server.', 'error')
+        })
       },
 
       generateForecastFromActual: (branchId) => {
