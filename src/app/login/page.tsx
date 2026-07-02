@@ -49,19 +49,13 @@ export default function LoginPage() {
         style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
       <div className="relative z-10 w-full max-w-[400px] mx-4">
-        {/* Logo & Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-            style={{ background: 'rgba(91,143,130,0.15)', border: '1px solid rgba(91,143,130,0.3)' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5B8F82" strokeWidth="1.5">
-              <rect x="1" y="3" width="15" height="13" rx="2"/>
-              <path d="M16 8h4l3 4v5h-7V8z"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/>
-              <circle cx="18.5" cy="18.5" r="2.5"/>
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">VOR System</h1>
-          <p className="text-[13px] text-teal-300/70 mt-1">Dynamic Oasis v1.05 — Fleet Monitoring</p>
+        {/* Brand */}
+        <div className="px-5 py-6 border-b flex items-center justify-center" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <img
+            src="/logo-vor-white.svg"
+            alt="VOR Logo"
+            className="w-full max-w-[260px] h-auto"
+          />
         </div>
 
         {/* Login Card */}

@@ -13,15 +13,15 @@ import {
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/dashboard', label: 'Dashboard',         icon: LayoutDashboard, section: 'Menu Utama' },
-  { href: '/master',    label: 'Master Data',        icon: Database },
+  { href: '/dashboard', label: 'Dashboard',         icon: LayoutDashboard, section: 'MAIN MENU' },
   { href: '/actual',    label: 'Actual Operation',   icon: Table2 },
   { href: '/forecast',  label: 'Forecast Planning',  icon: CalendarDays },
   { href: '/revenue',   label: 'Revenue Evaluation', icon: DollarSign },
-  { href: '/kpi',       label: 'KPI Engine',         icon: BarChart3,      section: 'Analitik' },
+  { href: '/kpi',       label: 'KPI Engine',         icon: BarChart3, section: 'REPORTS & ANALYTICS' },
   { href: '/fva',       label: 'Forecast vs Actual', icon: GitCompare },
   { href: '/breakdown', label: 'Breakdown Analysis', icon: AlertTriangle },
-  { href: '/audit',     label: 'Audit Trail',        icon: ScrollText,     section: 'Sistem' },
+  { href: '/master',    label: 'Master Data',        icon: Database,  section: 'SYSTEM CONFIGURATION'},
+  { href: '/audit',     label: 'Audit Trail',        icon: ScrollText},
 ]
 
 const ROLE_NAV: Record<string, string[]> = {
@@ -131,7 +131,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
         style={{ background: '#0F5E4F', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
 
         {/* Brand */}
-        <div className="border-b flex items-center justify-center" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="px-2 py-2 border-b flex items-center justify-center" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
           <img
             src="/logo-vor-white.svg"
             alt="VOR Logo"
@@ -221,7 +221,7 @@ export default function ShellLayout({ children }: { children: React.ReactNode })
         {/* Footer */}
         <footer className="px-6 py-3" style={{ borderTop: '1px solid #D6E4DC', background: '#FAFCFB' }}>
           <p className="text-[11px]" style={{ color: '#8FAE9F' }}>
-            VOR System v1.05 — Dynamic Oasis | © 2026 Vehicle Operations
+            VOR System v1.05 | © 2026 Vehicle Operations
           </p>
         </footer>
       </div>
